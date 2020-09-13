@@ -38,9 +38,9 @@ public class JwtRequestFilter extends OncePerRequestFilter {
       } catch (IllegalArgumentException e) {
         System.out.println("Unable to get JWT Token");
       }
-    } else {
-      logger.warn("JWT Token does not begin with Bearer String");
-    }
+    } ///else {
+      //logger.warn("JWT Token does not begin with Bearer String");
+    //}
     if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
       UserDetails userDetails = this.personAuthService.loadUserByUsername(email);
       if (jwtTokenUtil.validateToken(jwtToken, userDetails)) {

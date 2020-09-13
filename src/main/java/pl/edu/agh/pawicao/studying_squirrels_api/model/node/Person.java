@@ -2,6 +2,7 @@ package pl.edu.agh.pawicao.studying_squirrels_api.model.node;
 
 import lombok.Data;
 import org.neo4j.ogm.annotation.*;
+import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.Offer;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.PlaceOfResidence;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.TakenLesson;
 
@@ -12,7 +13,6 @@ import java.util.List;
 @NodeEntity
 @Data
 public class Person {
-  // TODO: Projections zamiast DTO
 
   @Id
   @GeneratedValue
@@ -49,13 +49,13 @@ public class Person {
   private List<TakenLesson> givenLessons = new ArrayList<>();
 
   @Relationship(type = "OFFERS")
-  private List<Subject> offeredSubjects = new ArrayList<>();
+  private List<Offer> offeredSubjects = new ArrayList<>();
 
   @Relationship(type = "SENT")
   private List<Message> sentMessages = new ArrayList<>();
 
-  @Relationship(type = "RECEIVED")
-  private List<Message> receivedMassages = new ArrayList<>();
+  @Relationship(type = "RECEIVED", direction = "INCOMING")
+  private List<Message> receivedMessages = new ArrayList<>();
 
   @Relationship(type = "LIVES_IN")
   private PlaceOfResidence placeOfResidence;

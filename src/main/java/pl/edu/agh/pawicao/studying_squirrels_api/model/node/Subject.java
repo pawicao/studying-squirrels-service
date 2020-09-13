@@ -3,6 +3,7 @@ package pl.edu.agh.pawicao.studying_squirrels_api.model.node;
 import lombok.Data;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
+import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.Offer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +21,6 @@ public class Subject {
   private List<Lesson> lessons = new ArrayList<>();
 
   @Relationship(type = "OFFERS", direction = "INCOMING")
-  private List<Person> offeringTutors = new ArrayList<>();
+  private List<Offer> offeringTutors = new ArrayList<>();
 
 }

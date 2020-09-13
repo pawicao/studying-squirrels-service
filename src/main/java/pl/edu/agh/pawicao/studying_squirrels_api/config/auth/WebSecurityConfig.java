@@ -48,14 +48,14 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Override
   public void configure(WebSecurity web) throws Exception {
-    web.ignoring().antMatchers("/authenticate", "/register", "/test/hello");
+    web.ignoring().antMatchers("/auth/**", "/api/hello");
   }
 
   @Override
   protected void configure(HttpSecurity httpSecurity) throws Exception {
     httpSecurity.csrf().disable()
         .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
-        .authorizeRequests().antMatchers("/authenticate", "/register", "/test/hello").permitAll()
+        .authorizeRequests().antMatchers("/auth/**", "/api/hello").permitAll()
         .anyRequest().authenticated()
         .and()
         .exceptionHandling()

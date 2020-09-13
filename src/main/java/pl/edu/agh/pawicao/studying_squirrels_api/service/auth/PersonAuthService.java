@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Person;
+import pl.edu.agh.pawicao.studying_squirrels_api.model.node.projection.Person.PersonCredentialsProjection;
 import pl.edu.agh.pawicao.studying_squirrels_api.repository.PersonRepository;
 
 @Service
@@ -23,15 +24,19 @@ public class PersonAuthService implements UserDetailsService {
 
   @Override
   public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-    Person person = personRepository.findPersonByEmail(email);
-    if (person == null) {
+    PersonCredentialsProjection personCredentials = personRepository.findPersonByEmail(email);
+    if (personCredentials == null) {
       throw new UsernameNotFoundException("Person not found with email: " + email);
     }
     return new User(
-        person.getEmail(),
-        person.getPassword(),
+        personCredentials.getEmail(),
+        personCredentials.getPassword(),
         new ArrayList<>()
     );
+  }
+
+  public boolean checkIfEmailExists(String email) {
+    return personRepository.existsByEmail(email);
   }
 
   public Person save(Person person) {
