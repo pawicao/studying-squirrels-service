@@ -10,19 +10,11 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-
-- task: Docker@2
-  inputs:
-    containerRegistry: 'studyingsquirrels-dockerhub'
-    repository: 'service'
-    Dockerfile: '**/Dockerfile'
-
-- task: Docker@2
-  inputs:
-    containerRegistry: 'studyingsquirrels-dockerhub'
-    repository: 'service'
-    command: 'push'
-    
+  - task: ContainerBuild@0
+    inputs:
+      dockerRegistryServiceConnection: 'studyingsquirrels-dockerhub'
+      repository: 'service'
+      Dockerfile: 'Dockerfile'
 
 
 # - task: Maven@3
