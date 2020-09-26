@@ -10,14 +10,22 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-- task: Maven@3
+
+- task: Docker@2
   inputs:
-    mavenPomFile: 'pom.xml'
-    publishJUnitResults: false
-    javaHomeOption: 'JDKVersion'
-    jdkVersionOption: '1.11'
-    mavenVersionOption: 'Default'
-    mavenAuthenticateFeed: false
-    effectivePomSkip: false
-    # sonarQubeRunAnalysis: true
-    # sqMavenPluginVersionChoice: 'latest'
+    containerRegistry: 'studyingsquirrels-dockerhub'
+    repository: 'service'
+    command: 'buildAndPush'
+    Dockerfile: '**/Dockerfile'
+
+# - task: Maven@3
+#   inputs:
+#     mavenPomFile: 'pom.xml'
+#     publishJUnitResults: false
+#     javaHomeOption: 'JDKVersion'
+#     jdkVersionOption: '1.11'
+#     mavenVersionOption: 'Default'
+#     mavenAuthenticateFeed: false
+#     effectivePomSkip: false
+#     # sonarQubeRunAnalysis: true
+#     # sqMavenPluginVersionChoice: 'latest'
