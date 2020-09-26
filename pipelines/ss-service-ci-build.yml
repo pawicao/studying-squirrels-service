@@ -15,8 +15,15 @@ steps:
   inputs:
     containerRegistry: 'studyingsquirrels-dockerhub'
     repository: 'service'
-    command: 'buildAndPush'
     Dockerfile: '**/Dockerfile'
+
+- task: Docker@2
+  inputs:
+    containerRegistry: 'studyingsquirrels-dockerhub'
+    repository: 'service'
+    command: 'push'
+    
+
 
 # - task: Maven@3
 #   inputs:
