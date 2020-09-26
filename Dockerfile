@@ -10,6 +10,6 @@ RUN mvn -f /home/app/pom.xml clean package
 # Package stage
 #
 FROM openjdk:11-jre-slim
-COPY --from=build /home/app/target/studying-squirrels-service.jar /usr/local/lib/demo.jar
+COPY --from=build /home/app/target/0.0.1-SNAPSHOT.jar /usr/local/lib/demo.jar
 EXPOSE 8080
-ENTRYPOINT ["java","-jar","/usr/local/lib/studying-squirrels-service.jar"]
+ENTRYPOINT ["java","-jar","/usr/local/lib/0.0.1-SNAPSHOT.jar"]
