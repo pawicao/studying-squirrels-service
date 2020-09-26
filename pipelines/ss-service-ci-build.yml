@@ -13,7 +13,7 @@ steps:
   - task: ContainerBuild@0
     inputs:
       dockerRegistryServiceConnection: 'studyingsquirrels-dockerhub'
-      repository: 'service'
+      repository: 'studyingsquirrels/service'
       Dockerfile: 'Dockerfile'
 
 
