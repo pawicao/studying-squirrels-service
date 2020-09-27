@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Person;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.projection.Person.PersonCredentialsProjection;
 import pl.edu.agh.pawicao.studying_squirrels_api.repository.PersonRepository;
+import pl.edu.agh.pawicao.studying_squirrels_api.util.exception.ConflictException;
 
 @Service
 public class PersonAuthService implements UserDetailsService {
@@ -39,7 +40,10 @@ public class PersonAuthService implements UserDetailsService {
     return personRepository.existsByEmail(email);
   }
 
-  public Person save(Person person) {
+  public Person createPerson(Person person) {
+    if(checkIfEmailExists(person.getEmail())) {
+      throw new ConflictException("Email");
+    }
     person.setPassword(bcryptEncoder.encode(person.getPassword()));
     return personRepository.save(person);
   }

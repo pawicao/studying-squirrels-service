@@ -22,31 +22,42 @@ public class JwtTokenUtil implements Serializable {
   @Value("${jwt.secret}")
   private String secret;
 
-  public String getUsernameFromToken(String token) {
-    return getClaimFromToken(token, Claims::getSubject);
+  public String extractUsername(String token) {
+    return extractClaim(token, Claims::getSubject);
   }
 
-  public <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver) {
-    final Claims claims = getAllClaimsFromToken(token);
+/*  public Date extractExpiration(String token) {
+    return extractClaim(token, Claims::getExpiration);
+  }*/
+
+  public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+    final Claims claims = extractAllClaims(token);
     return claimsResolver.apply(claims);
   }
 
-  private Claims getAllClaimsFromToken(String token) {
+  private Claims extractAllClaims(String token) {
     return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
   }
 
-  public String generateToken(UserDetails userDetails) {
+/*  private Boolean isTokenExpired(String token) {
+    return extractExpiration(token).before(new Date());
+  }*/
+
+  public String generateToken(String username) {
     Map<String, Object> claims = new HashMap<>();
-    return doGenerateToken(claims, userDetails.getUsername());
+    return createToken(claims, username);
   }
 
-  private String doGenerateToken(Map<String, Object> claims, String subject) {
+  private String createToken(Map<String, Object> claims, String subject) {
+
     return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date(System.currentTimeMillis()))
         .signWith(SignatureAlgorithm.HS512, secret).compact();
   }
 
   public Boolean validateToken(String token, UserDetails userDetails) {
-    final String username = getUsernameFromToken(token);
+    final String username = extractUsername(token);
     return (username.equals(userDetails.getUsername()));
   }
 }
+
+// TODO: Deprecated signWith

@@ -22,18 +22,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Autowired
-  private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-
-  @Autowired
   private UserDetailsService personAuthService;
 
   @Autowired
   private JwtRequestFilter jwtRequestFilter;
-
-  @Autowired
-  public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-    auth.userDetailsService(personAuthService).passwordEncoder(passwordEncoder());
-  }
 
   @Bean
   public PasswordEncoder passwordEncoder() {
@@ -47,21 +39,19 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
   }
 
   @Override
-  public void configure(WebSecurity web) throws Exception {
-    web.ignoring().antMatchers("/auth/**", "/api/hello");
-  }
-
-  @Override
   protected void configure(HttpSecurity httpSecurity) throws Exception {
     httpSecurity.csrf().disable()
-        .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
-        .authorizeRequests().antMatchers("/auth/**", "/api/hello").permitAll()
+        .authorizeRequests().antMatchers("/auth/**", "/api/hello**","/").permitAll()
         .anyRequest().authenticated()
         .and()
         .exceptionHandling()
-        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
         .and()
-        .sessionManagement()
-        .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+    httpSecurity.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+  }
+
+  @Override
+  protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+    auth.userDetailsService(personAuthService);
   }
 }

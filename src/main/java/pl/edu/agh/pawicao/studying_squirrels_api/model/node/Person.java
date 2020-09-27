@@ -1,6 +1,9 @@
 package pl.edu.agh.pawicao.studying_squirrels_api.model.node;
 
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.neo4j.ogm.annotation.*;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.Offer;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.PlaceOfResidence;
@@ -11,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @NodeEntity
-@Data
+@Getter @Setter
 public class Person {
 
   @Id
@@ -31,11 +34,11 @@ public class Person {
   @Property("born")
   private LocalDate dateOfBirth;
 
-  @Property("is_tutor")
-  private boolean isTutor;
+  @Getter(AccessLevel.NONE) @Setter(AccessLevel.NONE)
+  private boolean tutor;
 
-  @Property("is_student")
-  private boolean isStudent;
+  @Getter(AccessLevel.NONE) @Setter(AccessLevel.NONE)
+  private boolean student;
 
   private String phone;
 
@@ -59,5 +62,21 @@ public class Person {
 
   @Relationship(type = "LIVES_IN")
   private PlaceOfResidence placeOfResidence;
+
+  public boolean isTutor() {
+    return tutor;
+  }
+
+  public void setTutor(boolean tutor) {
+    this.tutor = tutor;
+  }
+
+  public boolean isStudent() {
+    return student;
+  }
+
+  public void setStudent(boolean student) {
+    this.student = student;
+  }
 
 }
