@@ -1,5 +1,6 @@
 package pl.edu.agh.pawicao.studying_squirrels_api.model.relationship;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import org.neo4j.ogm.annotation.*;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Person;
@@ -14,9 +15,11 @@ public class Acquaintance {
   @Id
   private Long id;
 
+  @JsonIgnoreProperties("friendshipsInitiated")
   @StartNode
   private Person friendOne;
 
+  @JsonIgnoreProperties("friendshipsReceived")
   @EndNode
   private Person friendTwo;
 

@@ -10,4 +10,6 @@ import java.util.List;
 public class BasicTutorDTO extends BasicPersonDTO {
   private List<Offer> offeredSubjects;
   private PlaceOfResidence placeOfResidence;
+  private Double tutorRating;
+  private Integer tutorRatingsGiven;
 }

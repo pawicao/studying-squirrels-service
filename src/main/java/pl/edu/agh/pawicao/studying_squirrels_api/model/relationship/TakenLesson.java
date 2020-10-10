@@ -19,10 +19,8 @@ public class TakenLesson {
   @EndNode
   private Lesson lesson;
 
-  @Property("tutor_rating")
   private Double tutorRating;
 
-  @Property("tutor_rating_description")
   private String tutorRatingDescription;
 
 }

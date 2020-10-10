@@ -1,10 +1,12 @@
 package pl.edu.agh.pawicao.studying_squirrels_api.model.node;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.neo4j.ogm.annotation.*;
+import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.Acquaintance;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.Offer;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.PlaceOfResidence;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.TakenLesson;
@@ -25,10 +27,8 @@ public class Person {
 
   private String password;
 
-  @Property("first_name")
   private String firstName;
 
-  @Property("last_name")
   private String lastName;
 
   @Property("born")
@@ -37,8 +37,14 @@ public class Person {
   @Getter(AccessLevel.NONE) @Setter(AccessLevel.NONE)
   private boolean tutor;
 
+  private Double tutorRating;
+  private Integer tutorRatingsGiven;
+
   @Getter(AccessLevel.NONE) @Setter(AccessLevel.NONE)
   private boolean student;
+
+  private Double studentRating;
+  private Integer studentRatingsGiven;
 
   private String phone;
 
@@ -59,6 +65,12 @@ public class Person {
 
   @Relationship(type = "RECEIVED", direction = "INCOMING")
   private List<Message> receivedMessages = new ArrayList<>();
+
+  @Relationship(type="IS_FRIEND")
+  private List<Acquaintance> friendshipsInitiated = new ArrayList<>();
+
+  @Relationship(type="IS_FRIEND", direction = "INCOMING")
+  private List<Acquaintance> friendshipsReceived = new ArrayList<>();
 
   @Relationship(type = "LIVES_IN")
   private PlaceOfResidence placeOfResidence;

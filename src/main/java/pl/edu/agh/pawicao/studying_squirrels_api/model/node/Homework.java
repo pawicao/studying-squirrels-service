@@ -1,9 +1,7 @@
 package pl.edu.agh.pawicao.studying_squirrels_api.model.node;
 
 import lombok.Data;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Property;
-import org.neo4j.ogm.annotation.Relationship;
+import org.neo4j.ogm.annotation.*;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -13,11 +11,14 @@ import java.util.List;
 @Data
 public class Homework {
 
+  @Id
+  @GeneratedValue
+  private Long id;
+
   private LocalDate deadline;
 
   private boolean done;
 
-  @Property("text_content")
   private String textContent;
 
   @Relationship(type = "CONTAINS")

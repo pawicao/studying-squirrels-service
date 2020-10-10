@@ -1,6 +1,8 @@
 package pl.edu.agh.pawicao.studying_squirrels_api.model.node;
 
 import lombok.Data;
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.GivenLesson;
@@ -14,6 +16,10 @@ import java.util.List;
 @NodeEntity
 @Data
 public class Lesson {
+
+  @Id
+  @GeneratedValue
+  private Long id;
 
   private boolean confirmed;
 
