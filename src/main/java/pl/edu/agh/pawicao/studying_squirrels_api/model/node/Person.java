@@ -1,10 +1,7 @@
 package pl.edu.agh.pawicao.studying_squirrels_api.model.node;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.AccessLevel;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.neo4j.ogm.annotation.*;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.Acquaintance;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.Offer;

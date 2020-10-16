@@ -3,10 +3,10 @@ package pl.edu.agh.pawicao.studying_squirrels_api.service.api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Person;
-import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.Acquaintance;
 import pl.edu.agh.pawicao.studying_squirrels_api.repository.PersonRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class PersonService {
@@ -22,10 +22,6 @@ public class PersonService {
 
   public List<Person> findNearTutors(Long id, Double rating, List<String> subjects, Double maxPrice) {
     return personRepository.findNearTutors(id, rating, subjects, maxPrice);
-  }
-
-  public Acquaintance createContactRequest(Long idOne, Long idTwo) {
-    return personRepository.createContactRequest(idOne, idTwo);
   }
 
 }
