@@ -4,7 +4,6 @@ import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Person;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.projection.Person.PersonCredentialsProjection;
-import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.Acquaintance;
 
 import java.util.List;
 
@@ -14,13 +13,13 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
 
   PersonCredentialsProjection findPersonByEmail(String email);
 
-  // TUTORS
-
   List<Person> findAllByTutorIsTrue();
 
   // TODO: Rating altering as transactions
   // TODO: Sorting in front-end
   // TODO: Uniqueness! Later on
+
+  // TUTORS
 
   @Query(
     "MATCH (sub:Subject)<-[offer:OFFERS]-(tutor:Person)-[tutorPlace:LIVES_IN]->(tutorCity:City), (student:Person) " +
@@ -45,13 +44,5 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
   List<Person> findNearTutors(Long id, Double rating, List<String> subjects, Double maxPrice);
 
   // ACQUAINTANCES
-
-  @Query(
-    "MATCH (me:Person), (someone:Person) " +
-      "WHERE ID(me) = $idOne AND ID(someone) = $idTwo " +
-      "CREATE (me)-[a:IS_FRIEND {accepted: false, since: date()}]->(someone) " +
-      "RETURN a"
-  )
-  Acquaintance createContactRequest(Long idOne, Long idTwo);
 
 }

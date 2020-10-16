@@ -50,14 +50,4 @@ public class PersonController {
     );
   }
 
-  @PostMapping("/friend")
-  ResponseEntity<Acquaintance> createContactRequest(
-    @RequestParam Long idOne, // TODO: Change to body params
-    @RequestParam Long idTwo
-  ) {
-    return ResponseEntity.ok(
-      personService.createContactRequest(idOne, idTwo)
-    );
-  }
-
 }
