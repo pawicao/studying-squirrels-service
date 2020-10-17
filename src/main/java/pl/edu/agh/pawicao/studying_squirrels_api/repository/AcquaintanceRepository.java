@@ -11,46 +11,46 @@ public interface AcquaintanceRepository extends Neo4jRepository<Acquaintance, Lo
 
   @Query(
     "MATCH (me:Person), (someone:Person) " +
-      "WHERE ID(me) = $idOne AND ID(someone) = $idTwo " +
-      "CREATE (me)-[a:IS_FRIEND {accepted: false, since: date()}]->(someone) " +
-      "RETURN a, me, someone"
+    "WHERE ID(me) = $idOne AND ID(someone) = $idTwo " +
+    "CREATE (me)-[a:IS_FRIEND {accepted: false, since: date()}]->(someone) " +
+    "RETURN a, me, someone"
   )
   Acquaintance createContactRequest(Long idOne, Long idTwo);
 
   @Query(
     "MATCH (someone:Person)-[a:IS_FRIEND]->(me:Person) " +
-      "WHERE ID(someone) = $idOne AND ID(me) = $idTwo " +
-      "SET a.accepted = true " +
-      "RETURN a, someone, me"
+    "WHERE ID(someone) = $idOne AND ID(me) = $idTwo " +
+    "SET a.accepted = true " +
+    "RETURN a, someone, me"
   )
   Acquaintance acceptContactRequest(Long idOne, Long idTwo);
 
   @Query(
     "MATCH (one:Person)-[a:IS_FRIEND]-(two:Person) " +
-      "WHERE ID(one) = $idOne AND ID(two) = $idTwo " +
-      "DELETE a " +
-      "RETURN ID(a)"
+    "WHERE ID(one) = $idOne AND ID(two) = $idTwo " +
+    "DELETE a " +
+    "RETURN ID(a)"
   )
   Long deleteContact(Long idOne, Long idTwo);
 
   @Query(
     "MATCH (n:Person)-[:IS_FRIEND {accepted: true}]-(m:Person) " +
-      "WHERE ID(n) = $id " +
-      "RETURN m ORDER BY m.lastName, n.firstName"
+    "WHERE ID(n) = $id " +
+    "RETURN m ORDER BY m.lastName, n.firstName"
   )
   List<Person> findAllAcquaintances(Long id);
 
   @Query(
     "MATCH (n:Person)-[a:IS_FRIEND {accepted: false}]->(m:Person) " +
-      "WHERE ID(n) = $id " +
-      "RETURN m ORDER BY a.since"
+    "WHERE ID(n) = $id " +
+    "RETURN m ORDER BY a.since"
   )
   List<Person> findSentAwaitingAcquaintances(Long id);
 
   @Query(
-      "MATCH (n:Person)<-[a:IS_FRIEND {accepted: false}]-(m:Person) " +
-          "WHERE ID(n) = $id " +
-          "RETURN m ORDER BY a.since"
+    "MATCH (n:Person)<-[a:IS_FRIEND {accepted: false}]-(m:Person) " +
+    "WHERE ID(n) = $id " +
+    "RETURN m ORDER BY a.since"
   )
   List<Person> findReceivedAwaitingAcquaintances(Long id);
 }

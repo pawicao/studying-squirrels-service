@@ -6,11 +6,13 @@ import java.time.LocalDate;
 
 public class CustomLocalDateConverter implements AttributeConverter<LocalDate, LocalDate> {
 
-  @Override public LocalDate toGraphProperty(LocalDate value) {
+  @Override
+  public LocalDate toGraphProperty(LocalDate value) {
     return value;
   }
 
-  @Override public LocalDate toEntityAttribute(LocalDate value) {
+  @Override
+  public LocalDate toEntityAttribute(LocalDate value) {
     return value;
   }
 }

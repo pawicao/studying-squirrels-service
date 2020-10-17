@@ -10,6 +10,7 @@ import java.util.List;
 public interface BasicTutorProjection extends BasicPersonProjection {
 
   List<Offer> getOfferedSubjects();
+
   PlaceOfResidence getPlaceOfResidence();
 
 }

@@ -20,13 +20,13 @@ public class MessageController {
 
   @PostMapping("/message")
   ResponseEntity<Message> addMessage(
-      @RequestParam Long senderId, // TODO: Change to body params
-      @RequestParam Long receiverId,
-      @RequestParam String text,
-      @RequestParam Long dateInMillis
-      ) {
+    @RequestParam Long senderId, // TODO: Change to body params
+    @RequestParam Long receiverId,
+    @RequestParam String text,
+    @RequestParam Long dateInMillis
+  ) {
     return ResponseEntity.ok(
-        messageService.addMessage(senderId, receiverId, text, dateInMillis)
+      messageService.addMessage(senderId, receiverId, text, dateInMillis)
     );
   }
 }

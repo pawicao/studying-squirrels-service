@@ -21,15 +21,14 @@ public class AcquaintanceController {
 
   @GetMapping("/friends")
   ResponseEntity<List<BasicPersonAcquaintanceDTO>> createContactRequest(
-      @RequestParam Long id,
-      @RequestParam(required = false) boolean incoming,
-      @RequestParam boolean accepted
+    @RequestParam Long id,
+    @RequestParam(required = false) boolean incoming,
+    @RequestParam boolean accepted
   ) {
     List<Person> persons;
-    if(accepted) {
+    if (accepted) {
       persons = acquaintanceService.findAllAcquaintances(id);
-    }
-    else {
+    } else {
       persons = incoming ? acquaintanceService.findReceivedAwaitingAcquaintances(id) :
         acquaintanceService.findSentAwaitingAcquaintances(id);
     }
@@ -38,31 +37,31 @@ public class AcquaintanceController {
 
   @PostMapping("/friend")
   ResponseEntity<Acquaintance> createContactRequest(
-      @RequestParam Long idOne, // TODO: Change to body params
-      @RequestParam Long idTwo
+    @RequestParam Long idOne, // TODO: Change to body params
+    @RequestParam Long idTwo
   ) {
     return ResponseEntity.ok(
-        acquaintanceService.createContactRequest(idOne, idTwo)
+      acquaintanceService.createContactRequest(idOne, idTwo)
     );
   }
 
   @PutMapping("/friend")
   ResponseEntity<Acquaintance> acceptContactRequest(
-      @RequestParam Long idOne, // TODO: Change to body params
-      @RequestParam Long idTwo
+    @RequestParam Long idOne, // TODO: Change to body params
+    @RequestParam Long idTwo
   ) {
     return ResponseEntity.ok(
-        acquaintanceService.acceptContactRequest(idOne, idTwo)
+      acquaintanceService.acceptContactRequest(idOne, idTwo)
     );
   }
 
   @DeleteMapping("/friend")
   ResponseEntity<Long> deleteContact(
-      @RequestParam Long idOne, // TODO: Change to body params
-      @RequestParam Long idTwo
+    @RequestParam Long idOne, // TODO: Change to body params
+    @RequestParam Long idTwo
   ) {
     return ResponseEntity.ok(
-        acquaintanceService.deleteContact(idOne, idTwo)
+      acquaintanceService.deleteContact(idOne, idTwo)
     );
   }
 }
