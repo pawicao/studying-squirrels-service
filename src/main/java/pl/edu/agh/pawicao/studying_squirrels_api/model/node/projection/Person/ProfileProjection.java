@@ -9,8 +9,11 @@ import java.util.List;
 public interface ProfileProjection extends BasicPersonProjection {
 
   String getLastName();
+
   LocalDate getDateOfBirth();
+
   List<Offer> getOfferedSubjects();
+
   PlaceOfResidence getPlaceOfResidence();
 
 }

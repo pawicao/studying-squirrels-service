@@ -24,7 +24,7 @@ public class SubjectController {
 
   @PostMapping("/subject")
   ResponseEntity<Subject> addSubject(
-      @RequestParam String name // TODO: Change to body params
+    @RequestParam String name // TODO: Change to body params
   ) {
     return ResponseEntity.ok(subjectService.addSubject(name));
   }

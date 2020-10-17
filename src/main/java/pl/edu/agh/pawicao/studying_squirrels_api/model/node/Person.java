@@ -13,7 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @NodeEntity
-@Getter @Setter
+@Getter
+@Setter
 public class Person {
 
   @Id
@@ -31,13 +32,15 @@ public class Person {
   @Property("born")
   private LocalDate dateOfBirth;
 
-  @Getter(AccessLevel.NONE) @Setter(AccessLevel.NONE)
+  @Getter(AccessLevel.NONE)
+  @Setter(AccessLevel.NONE)
   private boolean tutor;
 
   private Double tutorRating;
   private Integer tutorRatingsGiven;
 
-  @Getter(AccessLevel.NONE) @Setter(AccessLevel.NONE)
+  @Getter(AccessLevel.NONE)
+  @Setter(AccessLevel.NONE)
   private boolean student;
 
   private Double studentRating;
@@ -63,10 +66,10 @@ public class Person {
   @Relationship(type = "RECEIVED", direction = "INCOMING")
   private List<Message> receivedMessages = new ArrayList<>();
 
-  @Relationship(type="IS_FRIEND")
+  @Relationship(type = "IS_FRIEND")
   private List<Acquaintance> friendshipsInitiated = new ArrayList<>();
 
-  @Relationship(type="IS_FRIEND", direction = "INCOMING")
+  @Relationship(type = "IS_FRIEND", direction = "INCOMING")
   private List<Acquaintance> friendshipsReceived = new ArrayList<>();
 
   @Relationship(type = "LIVES_IN")

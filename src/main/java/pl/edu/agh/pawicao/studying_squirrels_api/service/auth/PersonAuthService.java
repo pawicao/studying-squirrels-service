@@ -30,9 +30,9 @@ public class PersonAuthService implements UserDetailsService {
       throw new UsernameNotFoundException("Person not found with email: " + email);
     }
     return new User(
-        personCredentials.getEmail(),
-        personCredentials.getPassword(),
-        new ArrayList<>()
+      personCredentials.getEmail(),
+      personCredentials.getPassword(),
+      new ArrayList<>()
     );
   }
 
@@ -41,7 +41,7 @@ public class PersonAuthService implements UserDetailsService {
   }
 
   public Person createPerson(Person person) {
-    if(checkIfEmailExists(person.getEmail())) {
+    if (checkIfEmailExists(person.getEmail())) {
       throw new ConflictException("Email");
     }
     person.setPassword(bcryptEncoder.encode(person.getPassword()));

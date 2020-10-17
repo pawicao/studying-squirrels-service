@@ -5,8 +5,6 @@ import org.springframework.stereotype.Service;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Message;
 import pl.edu.agh.pawicao.studying_squirrels_api.repository.MessageRepository;
 
-import java.time.LocalDateTime;
-
 @Service
 public class MessageService {
 

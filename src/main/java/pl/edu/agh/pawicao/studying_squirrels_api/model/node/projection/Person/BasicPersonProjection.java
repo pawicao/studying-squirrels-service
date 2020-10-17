@@ -6,7 +6,9 @@ import org.springframework.data.neo4j.annotation.QueryResult;
 public interface BasicPersonProjection {
 
   Long getId();
+
   String getFirstName();
+
   //@Value("#{target.student}")
   //boolean isStudent();
   //@Value("#{target.tutor}")

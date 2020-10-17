@@ -14,7 +14,9 @@ public class PersonService {
   @Autowired
   private PersonRepository personRepository;
 
-  public List<Person> findAllByTutorIsTrue() { return personRepository.findAllByTutorIsTrue(); }
+  public List<Person> findAllByTutorIsTrue() {
+    return personRepository.findAllByTutorIsTrue();
+  }
 
   public List<Person> findTutors(Long id, String city, Double rating, List<String> subjects, Double maxPrice) {
     return personRepository.findTutors(id, city, rating, subjects, maxPrice);

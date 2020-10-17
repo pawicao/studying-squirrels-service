@@ -31,18 +31,18 @@ public class JwtAuthenticationController {
   private PersonAuthService personAuthService;
 
   @RequestMapping(
-      value = "/mailcheck/{email}",
-      method = RequestMethod.GET
+    value = "/mailcheck/{email}",
+    method = RequestMethod.GET
   )
   public ResponseEntity<?> checkIfEmailExists(@PathVariable String email) {
     return ResponseEntity.ok(personAuthService.checkIfEmailExists(email));
   }
 
   @RequestMapping(
-      value = "/authenticate",
-      method = RequestMethod.POST,
-      consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
-      produces = MediaType.APPLICATION_JSON_VALUE
+    value = "/authenticate",
+    method = RequestMethod.POST,
+    consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+    produces = MediaType.APPLICATION_JSON_VALUE
   )
   public ResponseEntity<?> createAuthenticationToken(JwtRequest authenticationRequest) throws Exception {
     authenticate(authenticationRequest.getEmail(), authenticationRequest.getPassword());
@@ -51,17 +51,17 @@ public class JwtAuthenticationController {
   }
 
   @RequestMapping(
-      value = "/register",
-      method = RequestMethod.POST,
-      consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
-      produces = MediaType.APPLICATION_JSON_VALUE
+    value = "/register",
+    method = RequestMethod.POST,
+    consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+    produces = MediaType.APPLICATION_JSON_VALUE
   )
   public Person createPerson(Person person) {
     try {
       return personAuthService.createPerson(person);
     } catch (ConflictException ex) {
       throw new ResponseStatusException(
-          HttpStatus.CONFLICT, ex.getMessage(), ex);
+        HttpStatus.CONFLICT, ex.getMessage(), ex);
     }
   }
 
