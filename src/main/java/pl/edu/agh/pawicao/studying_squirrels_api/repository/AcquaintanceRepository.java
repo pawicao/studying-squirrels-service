@@ -19,7 +19,7 @@ public interface AcquaintanceRepository extends Neo4jRepository<Acquaintance, Lo
 
   @Query(
     "MATCH (someone:Person)-[a:IS_FRIEND]->(me:Person) " +
-    "WHERE ID(someone) = $idOne AND ID(me) = $idTwo " +
+    "WHERE ID(someone) = $idTwo AND ID(me) = $idOne " +
     "SET a.accepted = true " +
     "RETURN a, someone, me"
   )

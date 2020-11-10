@@ -3,9 +3,12 @@ package pl.edu.agh.pawicao.studying_squirrels_api;
 import org.modelmapper.ModelMapper;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import pl.edu.agh.pawicao.studying_squirrels_api.config.storage.StorageProperties;
 
 @SpringBootApplication
+@EnableConfigurationProperties(StorageProperties.class)
 public class StudyingSquirrelsApiApplication {
 
   public static void main(String[] args) {

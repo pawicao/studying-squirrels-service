@@ -8,6 +8,7 @@ import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Person;
 import pl.edu.agh.pawicao.studying_squirrels_api.util.CustomLocalDateConverter;
 
 import java.time.LocalDate;
+import java.time.ZonedDateTime;
 
 @RelationshipEntity(type = "IS_FRIEND")
 @Data
@@ -26,8 +27,7 @@ public class Acquaintance {
   private Person friendTwo;
 
   @Property("since")
-  @Convert(CustomLocalDateConverter.class)
-  private LocalDate friendsSince;
+  private ZonedDateTime friendsSince;
 
   private boolean accepted;
 }

@@ -3,12 +3,15 @@ package pl.edu.agh.pawicao.studying_squirrels_api.model.relationship;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.neo4j.ogm.annotation.*;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.City;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Person;
 
 @RelationshipEntity(type = "LIVES_IN")
-@Data
+@Getter
+@Setter
 public class PlaceOfResidence {
 
   @Id
