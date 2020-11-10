@@ -38,6 +38,6 @@ steps:
       repository: 'studyingsquirrels/service'
       Dockerfile: 'Dockerfile'
       tags: |
-        "$(dockertag)"	
+        $(dockertag)	
   
   # TODO PUSH INFRA
