@@ -13,7 +13,7 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        $timenow = Get-Date -Format "MM.dd.yyyy.HH.mm.ss"
+        $timenow = Get-Date -Format "yyyy.MM.dd.HH.mm.ss"
         $shotSha = ${sourceVersion:0:7}
         $dockertag = "$timenow" + "$shotSha"
         Write-Host $dockertag
