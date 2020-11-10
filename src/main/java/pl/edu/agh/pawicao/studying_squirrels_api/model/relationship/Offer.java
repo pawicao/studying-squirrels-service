@@ -2,13 +2,16 @@ package pl.edu.agh.pawicao.studying_squirrels_api.model.relationship;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Data;
+import lombok.*;
 import org.neo4j.ogm.annotation.*;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Person;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Subject;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RelationshipEntity(type = "OFFERS")
-@Data
+@Getter @Setter
 public class Offer {
 
   @GeneratedValue
@@ -25,4 +28,6 @@ public class Offer {
 
   private Double price;
 
+  @Properties(allowCast = true)
+  private Map<String, String> timeslots = new HashMap<>();
 }

@@ -4,11 +4,13 @@ package pl.edu.agh.pawicao.studying_squirrels_api.controller.api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pl.edu.agh.pawicao.studying_squirrels_api.model.api.IDPairRequest;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Person;
+import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.projection.Acquaintance.BasicAcquaintanceDTO;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.projection.Person.BasicPersonAcquaintanceDTO;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.Acquaintance;
 import pl.edu.agh.pawicao.studying_squirrels_api.service.api.AcquaintanceService;
-import pl.edu.agh.pawicao.studying_squirrels_api.util.exception.Mapper;
+import pl.edu.agh.pawicao.studying_squirrels_api.util.Mapper;
 
 import java.util.List;
 
@@ -16,11 +18,20 @@ import java.util.List;
 @RequestMapping("/api")
 public class AcquaintanceController {
 
+  private static BasicAcquaintanceDTO mapToDto(Acquaintance acquaintance) {
+    BasicAcquaintanceDTO result = new BasicAcquaintanceDTO();
+    result.setFriendsSince(acquaintance.getFriendsSince());
+    result.setId(acquaintance.getId());
+    result.setFriendOne(Mapper.map(acquaintance.getFriendOne(), BasicPersonAcquaintanceDTO.class));
+    result.setFriendTwo(Mapper.map(acquaintance.getFriendTwo(), BasicPersonAcquaintanceDTO.class));
+    return result;
+  }
+
   @Autowired
   private AcquaintanceService acquaintanceService;
 
   @GetMapping("/friends")
-  ResponseEntity<List<BasicPersonAcquaintanceDTO>> createContactRequest(
+  ResponseEntity<List<BasicPersonAcquaintanceDTO>> getContacts(
     @RequestParam Long id,
     @RequestParam(required = false) boolean incoming,
     @RequestParam boolean accepted
@@ -36,32 +47,27 @@ public class AcquaintanceController {
   }
 
   @PostMapping("/friend")
-  ResponseEntity<Acquaintance> createContactRequest(
-    @RequestParam Long idOne, // TODO: Change to body params
-    @RequestParam Long idTwo
+  ResponseEntity<BasicAcquaintanceDTO> createContactRequest(
+    @RequestBody IDPairRequest ids
   ) {
-    return ResponseEntity.ok(
-      acquaintanceService.createContactRequest(idOne, idTwo)
-    );
+    Acquaintance acquaintance = acquaintanceService.createContactRequest(ids);
+    return ResponseEntity.ok(mapToDto(acquaintance));
   }
 
   @PutMapping("/friend")
-  ResponseEntity<Acquaintance> acceptContactRequest(
-    @RequestParam Long idOne, // TODO: Change to body params
-    @RequestParam Long idTwo
+  ResponseEntity<BasicAcquaintanceDTO> acceptContactRequest(
+    @RequestBody IDPairRequest ids
   ) {
-    return ResponseEntity.ok(
-      acquaintanceService.acceptContactRequest(idOne, idTwo)
-    );
+    Acquaintance acquaintance = acquaintanceService.acceptContactRequest(ids);
+    return ResponseEntity.ok(mapToDto(acquaintance));
   }
 
   @DeleteMapping("/friend")
   ResponseEntity<Long> deleteContact(
-    @RequestParam Long idOne, // TODO: Change to body params
-    @RequestParam Long idTwo
+    @RequestBody IDPairRequest ids
   ) {
     return ResponseEntity.ok(
-      acquaintanceService.deleteContact(idOne, idTwo)
+      acquaintanceService.deleteContact(ids)
     );
   }
 }

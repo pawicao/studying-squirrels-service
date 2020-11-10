@@ -10,10 +10,14 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import pl.edu.agh.pawicao.studying_squirrels_api.config.auth.JwtTokenUtil;
+import pl.edu.agh.pawicao.studying_squirrels_api.model.api.ProfileEditRequest;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.auth.JwtRequest;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.auth.JwtResponse;
+import pl.edu.agh.pawicao.studying_squirrels_api.model.auth.RegistrationRequest;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Person;
+import pl.edu.agh.pawicao.studying_squirrels_api.model.node.projection.Person.DetailedPersonAcquaintanceDTO;
 import pl.edu.agh.pawicao.studying_squirrels_api.service.auth.PersonAuthService;
+import pl.edu.agh.pawicao.studying_squirrels_api.util.Mapper;
 import pl.edu.agh.pawicao.studying_squirrels_api.util.exception.ConflictException;
 
 @RestController
@@ -50,13 +54,23 @@ public class JwtAuthenticationController {
     return ResponseEntity.ok(new JwtResponse(token));
   }
 
+  @PutMapping("/person")
+  public ResponseEntity<DetailedPersonAcquaintanceDTO> editProfile(
+    @RequestBody ProfileEditRequest request
+  ) throws Exception {
+    authenticate(request.getEmail(), request.getOldPassword());
+    return ResponseEntity.ok(
+      Mapper.map(personAuthService.editProfile(request), DetailedPersonAcquaintanceDTO.class)
+    );
+  }
+
   @RequestMapping(
     value = "/register",
     method = RequestMethod.POST,
     consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
     produces = MediaType.APPLICATION_JSON_VALUE
   )
-  public Person createPerson(Person person) {
+  public Person createPerson(RegistrationRequest person) {
     try {
       return personAuthService.createPerson(person);
     } catch (ConflictException ex) {

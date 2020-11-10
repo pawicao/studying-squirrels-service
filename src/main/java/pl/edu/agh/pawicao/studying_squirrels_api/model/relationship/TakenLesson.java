@@ -1,5 +1,6 @@
 package pl.edu.agh.pawicao.studying_squirrels_api.model.relationship;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import org.neo4j.ogm.annotation.*;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Lesson;
@@ -13,14 +14,19 @@ public class TakenLesson {
   @GeneratedValue
   private Long id;
 
+  @JsonIgnoreProperties({
+    "takenLessons", "givenLessons", "email", "password", "dateOfBirth", "tutor", "tutorRating",
+    "tutorRatingsGiven", "phone", "offeredSubjects", "sentMessages", "receivedMessages", "friendshipsInitiated",
+    "friendshipsReceived", "placeOfResidence"
+  })
   @StartNode
   private Person student;
 
   @EndNode
   private Lesson lesson;
 
-  private Double tutorRating;
+  private Double studentRating;
 
-  private String tutorRatingDescription;
+  private String studentRatingDescription;
 
 }

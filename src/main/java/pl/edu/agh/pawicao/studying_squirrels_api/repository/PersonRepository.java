@@ -4,7 +4,9 @@ import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Person;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.projection.Person.PersonCredentialsProjection;
+import pl.edu.agh.pawicao.studying_squirrels_api.model.node.projection.RatingDTO;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 
 public interface PersonRepository extends Neo4jRepository<Person, Long> {
@@ -20,6 +22,16 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
   // TODO: Uniqueness! Later on
 
   // TUTORS
+  @Query(
+    "CREATE (n:Person {email: $email, password: $password, firstName: $firstName, " +
+    "lastName: $lastName, phone: $phone, photoPath: null, student: $student, " +
+    "tutor: $tutor, dateOfBirth: datetime({epochSeconds: $dateInMillis/1000})}) " +
+    "RETURN n"
+  )
+  Person addPerson(
+    String email, String password, String firstName, String lastName, String phone,
+    boolean student, boolean tutor, Long dateInMillis
+  );
 
   @Query(
     "MATCH (sub:Subject)<-[offer:OFFERS]-(tutor:Person)-[tutorPlace:LIVES_IN]->(tutorCity:City), (student:Person) " +
@@ -43,6 +55,37 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
   )
   List<Person> findNearTutors(Long id, Double rating, List<String> subjects, Double maxPrice);
 
-  // ACQUAINTANCES
+  @Query(
+    "MATCH (p1:Person), (p2:Person) WHERE ID(p1) = $idOne AND ID(p2) = $idTwo " +
+    "RETURN EXISTS((p1)-[:IS_FRIEND {accepted: true}]-(p2))"
+  )
+  boolean areContacts(Long idOne, Long idTwo);
 
+  @Query(
+    "MATCH (n:Person)-[took:TOOK]->(lesson:Lesson)-[isOf:IS_OF]->(subject:Subject) " +
+    "WHERE ID(n) = $personId and EXISTS(took.tutorRating) " +
+    "RETURN took.tutorRating as rating, took.tutorRatingDescription AS ratingDescription, " +
+    "lesson.date AS date, subject.name AS subject"
+  )
+  List<RatingDTO> getStudentRatings(Long personId);
+
+  @Query(
+    "MATCH (n:Person)-[gave:GAVE]->(lesson:Lesson)-[isOf:IS_OF]->(subject:Subject) " +
+    "WHERE ID(n) = $personId and EXISTS(gave.tutorRating) " +
+    "RETURN gave.tutorRating as rating, gave.tutorRatingDescription AS ratingDescription, " +
+    "lesson.date AS date, subject.name AS subject"
+  )
+  List<RatingDTO> getTutorRatings(Long personId);
+
+  @Query(
+    "MATCH (n:Person)-[:GAVE]->(lesson:Lesson {canceled: false}) WHERE ID(n) = $tutorId " +
+    "AND lesson.date > datetime({epochSeconds: $dateInMillis/1000}) " +
+    "RETURN lesson.date AS dates"
+  )
+  List<ZonedDateTime> getBusyTimeslots(Long tutorId, Long dateInMillis);
+
+  @Query(
+    "MATCH (n:Person) WHERE ID(n) = $personId SET n.photoPath = $photoPath"
+  )
+  Person setPhotoPath(Long personId, String photoPath);
 }

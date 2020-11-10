@@ -1,5 +1,7 @@
 package pl.edu.agh.pawicao.studying_squirrels_api.model.relationship;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import org.neo4j.ogm.annotation.*;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.City;
@@ -16,8 +18,11 @@ public class PlaceOfLesson {
   @StartNode
   private Lesson lesson;
 
+  @JsonIgnoreProperties({"citizens", "lessons"})
   @EndNode
   private City city;
 
-  private String address;
+  private String street;
+
+  private String postalCode;
 }

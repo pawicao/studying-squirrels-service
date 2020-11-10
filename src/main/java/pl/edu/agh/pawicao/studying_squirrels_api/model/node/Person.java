@@ -3,12 +3,15 @@ package pl.edu.agh.pawicao.studying_squirrels_api.model.node;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
 import org.neo4j.ogm.annotation.*;
+import org.neo4j.ogm.annotation.typeconversion.Convert;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.Acquaintance;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.Offer;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.PlaceOfResidence;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.TakenLesson;
+import pl.edu.agh.pawicao.studying_squirrels_api.util.CustomLocalDateConverter;
 
 import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,26 +32,23 @@ public class Person {
 
   private String lastName;
 
-  @Property("born")
-  private LocalDate dateOfBirth;
+  private ZonedDateTime dateOfBirth;
 
   @Getter(AccessLevel.NONE)
   @Setter(AccessLevel.NONE)
   private boolean tutor;
 
-  private Double tutorRating;
-  private Integer tutorRatingsGiven;
+  private Double tutorRating = 0.0;
+  private Integer tutorRatingsGiven = 0;
 
   @Getter(AccessLevel.NONE)
   @Setter(AccessLevel.NONE)
   private boolean student;
 
-  private Double studentRating;
-  private Integer studentRatingsGiven;
+  private Double studentRating = 0.0;
+  private Integer studentRatingsGiven = 0;
 
   private String phone;
-
-  @Property("photo")
   private String photoPath;
 
   @Relationship(type = "TOOK")

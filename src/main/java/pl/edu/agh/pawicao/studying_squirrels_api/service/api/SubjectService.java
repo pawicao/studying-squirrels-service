@@ -13,11 +13,15 @@ public class SubjectService {
   @Autowired
   private SubjectRepository subjectRepository;
 
+  public Subject getSubject(Long subjectId) {
+    return subjectRepository.findById(subjectId).get();
+  }
+
   public List<Subject> getAllSubjects() {
     return subjectRepository.findAll();
   }
 
-  public Subject addSubject(String name) {
+  public Subject createSubject(String name) {
     Subject subject = new Subject();
     subject.setName(name);
     subject.setIcon("book");

@@ -1,4 +1,4 @@
-package pl.edu.agh.pawicao.studying_squirrels_api.util.exception;
+package pl.edu.agh.pawicao.studying_squirrels_api.util;
 
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;

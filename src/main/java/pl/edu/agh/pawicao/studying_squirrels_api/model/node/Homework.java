@@ -1,9 +1,11 @@
 package pl.edu.agh.pawicao.studying_squirrels_api.model.node;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import org.neo4j.ogm.annotation.*;
 
 import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,15 +17,20 @@ public class Homework {
   @GeneratedValue
   private Long id;
 
-  private LocalDate deadline;
+  private ZonedDateTime deadline;
+
+  private ZonedDateTime handedIn;
 
   private boolean done;
 
   private String textContent;
 
+  private String solution;
+
   @Relationship(type = "CONTAINS")
   private List<Attachment> attachments = new ArrayList<>();
 
+  @JsonIgnoreProperties({"homeworks", "givenLesson", "takenLesson", "place"})
   @Relationship(type = "HAS", direction = "INCOMING")
   private Lesson lesson;
 
