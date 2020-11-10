@@ -26,5 +26,7 @@ steps:
       dockerRegistryServiceConnection: 'studyingsquirrels-dockerhub'
       repository: 'studyingsquirrels/service'
       Dockerfile: 'Dockerfile'
+      tags: |
+        "$(Build.SourceVersion).$(Date:yyyyMMdd).$(Rev:.r)"	
   
   # TODO PUSH INFRA
