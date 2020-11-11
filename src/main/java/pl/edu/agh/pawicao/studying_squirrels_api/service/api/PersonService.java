@@ -3,12 +3,17 @@ package pl.edu.agh.pawicao.studying_squirrels_api.service.api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Person;
+import pl.edu.agh.pawicao.studying_squirrels_api.model.node.projection.Person.BasicPersonDTO;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.projection.RatingDTO;
+import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.Offer;
+import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.projection.Offer.OfferDTO;
 import pl.edu.agh.pawicao.studying_squirrels_api.repository.PersonRepository;
 
 import javax.security.auth.Subject;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class PersonService {
@@ -44,7 +49,48 @@ public class PersonService {
     return personRepository.getBusyTimeslots(tutorId, dateInMillis);
   }
 
+  public List<ZonedDateTime> getBusyTimeslots(Long tutorId) {
+    return personRepository.getBusyTimeslots(tutorId);
+  }
+
   public void addPhotoPath(Long personId, String photoPath) {
     personRepository.setPhotoPath(personId, photoPath);
+  }
+
+  public String findFirstTimeslot(Person tutor) {
+    List<ZonedDateTime> busyTimeslots = getBusyTimeslots(tutor.getId());
+    String min = "Full";
+    for(Offer offer : tutor.getOfferedSubjects()) {
+      String firstTimeslotForOffer = findFirstTimeslotForOffer(offer, busyTimeslots);
+      if(firstTimeslotForOffer.compareTo(min) < 0)
+        min = firstTimeslotForOffer;
+    }
+    return min;
+  }
+
+  public String findFirstTimeslotForOffer(Offer offer, List<ZonedDateTime> busyTimeslots) {
+    Map<String, List<String>> slots = OfferDTO.slotsAsList(offer.getTimeslots());
+    ZonedDateTime now = ZonedDateTime.now();
+    ZonedDateTime tmpDate = ZonedDateTime.now();
+    while(true) {
+      String dayOfWeek = String.valueOf(tmpDate.getDayOfWeek().getValue());
+      if(!slots.containsKey(dayOfWeek)) {
+        tmpDate = tmpDate.plusDays(1);
+        continue;
+      }
+      for(String timeslot : slots.get(dayOfWeek)) {
+        ZonedDateTime resultTime = tmpDate
+          .withHour(Integer.parseInt(timeslot.substring(0,2))).withMinute(0).withSecond(0).withNano(0);
+        if(busyTimeslots.contains(resultTime) || resultTime.isBefore(now)) {
+          tmpDate = tmpDate.plusDays(1);
+          continue;
+        }
+        return resultTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+      }
+    }
+  }
+
+  public Person findRecommendedTutor(Long id, Double rating, List<String> subjects, Double maxPrice) {
+    return personRepository.findRecommendedTutor(id, rating, subjects, maxPrice);
   }
 }

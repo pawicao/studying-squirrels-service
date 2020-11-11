@@ -1,18 +1,15 @@
 package pl.edu.agh.pawicao.studying_squirrels_api.controller.api;
 
-import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.api.FileResponse;
-import pl.edu.agh.pawicao.studying_squirrels_api.model.auth.RegistrationRequest;
+import pl.edu.agh.pawicao.studying_squirrels_api.model.api.TutorWithTimeslotResponse;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Person;
-import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Subject;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.projection.Person.BasicTutorDTO;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.projection.Person.DetailedPersonAcquaintanceDTO;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.projection.Person.DetailedPersonDTO;
@@ -22,18 +19,16 @@ import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.projection.O
 import pl.edu.agh.pawicao.studying_squirrels_api.service.api.OfferService;
 import pl.edu.agh.pawicao.studying_squirrels_api.service.api.PersonService;
 import pl.edu.agh.pawicao.studying_squirrels_api.service.api.StorageService;
-import pl.edu.agh.pawicao.studying_squirrels_api.service.api.SubjectService;
 import pl.edu.agh.pawicao.studying_squirrels_api.util.DateUtils;
 import pl.edu.agh.pawicao.studying_squirrels_api.util.FileUtils;
 import pl.edu.agh.pawicao.studying_squirrels_api.util.Mapper;
 
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -91,10 +86,7 @@ public class PersonController {
           continue;
         resultHours.add(timeslot);
       }
-      result.put(
-        tmpDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-        resultHours
-      );
+      result.put(tmpDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), resultHours);
     }
     return ResponseEntity.ok(result);
   }
@@ -105,28 +97,47 @@ public class PersonController {
   }
 
   @GetMapping("/tutors")
-  ResponseEntity<List<BasicTutorDTO>> findTutors(
+  ResponseEntity<List<TutorWithTimeslotResponse>> findTutors(
     @RequestParam Long id,
     @RequestParam(required = false) String city,
     @RequestParam(required = false) Double rating,
     @RequestParam(required = false) List<String> subjects,
     @RequestParam(required = false) Double maxPrice
   ) {
-    return ResponseEntity.ok(
-      Mapper.mapAll(personService.findTutors(id, city, rating, subjects, maxPrice), BasicTutorDTO.class)
-    );
+    List<Person> tutors = personService.findTutors(id, city, rating, subjects, maxPrice);
+    return ResponseEntity
+      .ok(tutors.stream()
+        .map(tutor -> new TutorWithTimeslotResponse(Mapper.map(tutor, BasicTutorDTO.class),
+          personService.findFirstTimeslot(tutor)))
+        .collect(Collectors.toList()));
   }
 
   @GetMapping("/nearTutors")
-  ResponseEntity<List<BasicTutorDTO>> findNearTutors(
+  ResponseEntity<List<TutorWithTimeslotResponse>> findNearTutors(
     @RequestParam Long id,
     @RequestParam(required = false) Double rating,
     @RequestParam(required = false) List<String> subjects,
     @RequestParam(required = false) Double maxPrice
   ) {
-    return ResponseEntity.ok(
-      Mapper.mapAll(personService.findNearTutors(id, rating, subjects, maxPrice), BasicTutorDTO.class)
-    );
+    List<Person> tutors = personService.findNearTutors(id, rating, subjects, maxPrice);
+    return ResponseEntity
+      .ok(tutors.stream()
+        .map(tutor -> new TutorWithTimeslotResponse(Mapper.map(tutor, BasicTutorDTO.class),
+          personService.findFirstTimeslot(tutor)))
+        .collect(Collectors.toList()));
+  }
+
+  @GetMapping("/recommendedTutor")
+  ResponseEntity<TutorWithTimeslotResponse> findRecommendedTutor(
+    @RequestParam Long id,
+    @RequestParam(required = false) Double rating,
+    @RequestParam(required = false) List<String> subjects,
+    @RequestParam(required = false) Double maxPrice
+  ) {
+    Person recommendedTutor = personService.findRecommendedTutor(id, rating, subjects, maxPrice);
+    return recommendedTutor == null ? ResponseEntity.notFound().build() :
+      ResponseEntity.ok(new TutorWithTimeslotResponse(Mapper.map(recommendedTutor, BasicTutorDTO.class),
+        personService.findFirstTimeslot(recommendedTutor)));
   }
 
   @RequestMapping(
