@@ -9,7 +9,6 @@ public class DateUtils {
   public static ZonedDateTime millsToLocalDateTime(long m){
     ZoneId zoneId = ZoneId.systemDefault();
     Instant instant = Instant.ofEpochSecond(m/1000);
-    ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(instant, zoneId);
-    return zonedDateTime;
+    return ZonedDateTime.ofInstant(instant, zoneId);
   }
 }

@@ -22,7 +22,7 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
   @Query(
     "CREATE (n:Person {email: $email, password: $password, firstName: $firstName, " +
     "lastName: $lastName, phone: $phone, photoPath: null, student: $student, " +
-    "tutor: $tutor, dateOfBirth: datetime({epochSeconds: $dateInMillis/1000})}) " +
+    "tutor: $tutor, dateOfBirth: datetime({timezone: 'Europe/Warsaw', epochSeconds: $dateInMillis/1000})}) " +
     "RETURN n"
   )
   Person addPerson(
@@ -92,7 +92,7 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
 
   @Query(
     "MATCH (n:Person)-[:GAVE]->(lesson:Lesson {canceled: false}) WHERE ID(n) = $tutorId " +
-    "AND lesson.date > datetime({epochSeconds: $dateInMillis/1000}) " +
+    "AND lesson.date > datetime({timezone: 'Europe/Warsaw', epochSeconds: $dateInMillis/1000}) " +
     "RETURN lesson.date AS dates"
   )
   List<ZonedDateTime> getBusyTimeslots(Long tutorId, Long dateInMillis);

@@ -12,7 +12,7 @@ public interface LessonRepository extends Neo4jRepository<Lesson, Long> {
     "MATCH (student:Person), (city:City)<-[tutorPlace:LIVES_IN]-(tutor:Person)-[offer:OFFERS]->(subject:Subject) " +
     "WHERE ID(student) = $studentId AND ID(offer) = $offerId " +
     "CREATE (student)-[took:TOOK]->(lesson:Lesson {studentDescription: $studentDescription, confirmed: false, " +
-    "tutorDescription: '',canceled: false,date: datetime({epochSeconds: $dateInMillis/1000})})<-[gave:GAVE]-(tutor) " +
+    "tutorDescription: '',canceled: false,date: datetime({timezone: 'Europe/Warsaw', epochSeconds: $dateInMillis/1000})})<-[gave:GAVE]-(tutor) " +
     "CREATE (city)<-[wasIn:WAS_IN {street: tutorPlace.street, postalCode: tutorPlace.postalCode}]" +
     "-(lesson)-[isOf:IS_OF]->(subject) " +
     "RETURN student, tutor, offer, subject, lesson, took, gave, isOf, city, wasIn"
@@ -22,7 +22,7 @@ public interface LessonRepository extends Neo4jRepository<Lesson, Long> {
   @Query(
     "MATCH (student:Person)-[took:TOOK]->(lesson:Lesson)<-[gave:GAVE]-(tutor:Person) " +
     "MATCH (homework:Homework)<-[has:HAS]-(lesson)-[isOf:IS_OF]->(subject:Subject) WHERE ID(student) = $personId " +
-    "AND lesson.date < datetime({epochSeconds: $dateInMillis/1000}) " +
+    "AND lesson.date < datetime({timezone: 'Europe/Warsaw', epochSeconds: $dateInMillis/1000}) " +
     "RETURN student, took, lesson, gave, tutor, isOf, subject, homework, has"
   )
   List<Lesson> findAllPastLessonsForStudent(Long personId, Long dateInMillis);
@@ -30,7 +30,7 @@ public interface LessonRepository extends Neo4jRepository<Lesson, Long> {
   @Query(
     "MATCH (student:Person)-[took:TOOK]->(lesson:Lesson)<-[gave:GAVE]-(tutor:Person) " +
     "MATCH (homework:Homework)<-[has:HAS]-(lesson)-[isOf:IS_OF]->(subject:Subject) WHERE ID(student) = $personId " +
-    "AND lesson.date > datetime({epochSeconds: $dateInMillis/1000}) " +
+    "AND lesson.date > datetime({timezone: 'Europe/Warsaw', epochSeconds: $dateInMillis/1000}) " +
     "RETURN student, took, lesson, gave, tutor, isOf, subject, homework, has"
   )
   List<Lesson> findAllFutureLessonsForStudent(Long personId, Long dateInMillis);
@@ -38,7 +38,7 @@ public interface LessonRepository extends Neo4jRepository<Lesson, Long> {
   @Query(
     "MATCH (student:Person)-[took:TOOK]->(lesson:Lesson)<-[gave:GAVE]-(tutor:Person) " +
     "MATCH (homework:Homework)<-[has:HAS]-(lesson)-[isOf:IS_OF]->(subject:Subject) WHERE ID(tutor) = $personId " +
-    "AND lesson.date < datetime({epochSeconds: $dateInMillis/1000}) " +
+    "AND lesson.date < datetime({timezone: 'Europe/Warsaw', epochSeconds: $dateInMillis/1000}) " +
     "RETURN student, took, lesson, gave, tutor, isOf, subject, homework, has"
   )
   List<Lesson> findAllPastLessonsForTutor(Long personId, Long dateInMillis);
@@ -46,7 +46,7 @@ public interface LessonRepository extends Neo4jRepository<Lesson, Long> {
   @Query(
     "MATCH (student:Person)-[took:TOOK]->(lesson:Lesson)<-[gave:GAVE]-(tutor:Person) " +
     "MATCH (homework:Homework)<-[has:HAS]-(lesson)-[isOf:IS_OF]->(subject:Subject) WHERE ID(tutor) = $personId " +
-    "AND lesson.date > datetime({epochSeconds: $dateInMillis/1000}) " +
+    "AND lesson.date > datetime({timezone: 'Europe/Warsaw', epochSeconds: $dateInMillis/1000}) " +
     "RETURN student, took, lesson, gave, tutor, isOf, subject, homework, has"
   )
   List<Lesson> findAllFutureLessonsForTutor(Long personId, Long dateInMillis);

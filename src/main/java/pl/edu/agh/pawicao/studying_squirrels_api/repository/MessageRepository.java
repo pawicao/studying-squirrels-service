@@ -10,7 +10,7 @@ public interface MessageRepository extends Neo4jRepository<Message, Long> {
   @Query(
     "MATCH (sender:Person), (receiver:Person) " +
     "WHERE ID(sender) = $senderId AND ID(receiver) = $receiverId " +
-    "CREATE (sender)-[x:SENT]->(m:Message {text: $text, date: datetime({epochSeconds: $dateInMillis/1000})})" +
+    "CREATE (sender)-[x:SENT]->(m:Message {text: $text, date: datetime({timezone: 'Europe/Warsaw', epochSeconds: $dateInMillis/1000})})" +
     "-[y:RECEIVED]->(receiver) " +
     "RETURN m, sender, receiver, x, y"
   )

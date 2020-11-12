@@ -62,7 +62,7 @@ public class PersonController {
     return ResponseEntity.ok(personService.getRatings(personId, student));
   }
 
-  @GetMapping("/tutors/{tutorId}/timeslots") //TODO: Fix timezone issues in comparison inside loop
+  @GetMapping("/tutors/{tutorId}/timeslots")
   ResponseEntity<Map<String, List<String>>> getFreeTimeslots (
     @PathVariable Long tutorId,
     @RequestParam Long offerId,
