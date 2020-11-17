@@ -57,7 +57,8 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
     "MATCH (sub:Subject)<-[offer:OFFERS]-(tutor:Person)-[tutorPlace:LIVES_IN]->" +
     "(city:City)<-[studentPlace:LIVES_IN]-(student:Person) " +
     "MATCH (tutor)-[gave:GAVE]->(:Lesson)<-[:TOOK]-(:Person)-[:IS_FRIEND {accepted: true}]-(student) " +
-    "WITH gave, sub, offer, tutor, tutorPlace, city, studentPlace, student, AVG(gave.tutorRating) as averageTutorRating " +
+    "WITH gave, sub, offer, tutor, tutorPlace, city, studentPlace, student, " +
+    "AVG(gave.tutorRating) as averageTutorRating " +
     "WHERE tutor.tutor = true AND ID(student) = $id AND ID(tutor) <> $id " +
     "AND tutorPlace.postalCode = studentPlace.postalCode " +
     "AND ($rating is null OR tutor.tutorRating >= $rating) " +

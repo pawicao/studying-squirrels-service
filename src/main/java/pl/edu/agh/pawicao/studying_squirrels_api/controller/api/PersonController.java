@@ -108,7 +108,7 @@ public class PersonController {
     return ResponseEntity
       .ok(tutors.stream()
         .map(tutor -> new TutorWithTimeslotResponse(Mapper.map(tutor, BasicTutorDTO.class),
-          personService.findFirstTimeslot(tutor)))
+          personService.findFirstTimeslot(tutor), personService.findLowestPrice(tutor)))
         .collect(Collectors.toList()));
   }
 
@@ -123,7 +123,7 @@ public class PersonController {
     return ResponseEntity
       .ok(tutors.stream()
         .map(tutor -> new TutorWithTimeslotResponse(Mapper.map(tutor, BasicTutorDTO.class),
-          personService.findFirstTimeslot(tutor)))
+          personService.findFirstTimeslot(tutor), personService.findLowestPrice(tutor)))
         .collect(Collectors.toList()));
   }
 
@@ -137,7 +137,7 @@ public class PersonController {
     Person recommendedTutor = personService.findRecommendedTutor(id, rating, subjects, maxPrice);
     return recommendedTutor == null ? ResponseEntity.notFound().build() :
       ResponseEntity.ok(new TutorWithTimeslotResponse(Mapper.map(recommendedTutor, BasicTutorDTO.class),
-        personService.findFirstTimeslot(recommendedTutor)));
+        personService.findFirstTimeslot(recommendedTutor), personService.findLowestPrice(recommendedTutor)));
   }
 
   @RequestMapping(

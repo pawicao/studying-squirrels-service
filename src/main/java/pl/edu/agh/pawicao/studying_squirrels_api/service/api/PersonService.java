@@ -14,6 +14,8 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.OptionalDouble;
 
 @Service
 public class PersonService {
@@ -66,6 +68,12 @@ public class PersonService {
         min = firstTimeslotForOffer;
     }
     return min;
+  }
+
+  public Double findLowestPrice(Person tutor) {
+    OptionalDouble optionalLowestPrice = tutor.getOfferedSubjects().stream()
+      .filter(offer -> offer.getPrice() != null).mapToDouble(Offer::getPrice).min();
+    return optionalLowestPrice.isPresent() ? optionalLowestPrice.getAsDouble() : null;
   }
 
   public String findFirstTimeslotForOffer(Offer offer, List<ZonedDateTime> busyTimeslots) {

@@ -8,4 +8,5 @@ import pl.edu.agh.pawicao.studying_squirrels_api.model.node.projection.Person.Ba
 public class TutorWithTimeslotResponse {
   private BasicTutorDTO tutor;
   private String timeslot;
+  private Double lowestPrice;
 }
