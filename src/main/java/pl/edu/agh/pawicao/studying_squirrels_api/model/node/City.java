@@ -1,5 +1,6 @@
 package pl.edu.agh.pawicao.studying_squirrels_api.model.node;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.Getter;
@@ -24,9 +25,11 @@ public class City {
 
   private String name;
 
+  @JsonIgnore
   @Relationship(type = "LIVES_IN", direction = "INCOMING")
   private List<PlaceOfResidence> citizens = new ArrayList<>();
 
+  @JsonIgnore
   @Relationship(type = "WAS_IN", direction = "INCOMING")
   private List<PlaceOfLesson> lessons = new ArrayList<>();
 

@@ -65,7 +65,7 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
     "AND ($subjects is null OR ANY(subject in $subjects WHERE sub.name = subject)) " +
     "AND ($maxPrice is null OR offer.price <= $maxPrice) " +
     "AND averageTutorRating > 4.0 " +
-    "RETURN tutor as person, tutorPlace as placeOfResidence, city, offer as offeredSubject, sub as subject"
+    "RETURN tutor as person, tutorPlace as placeOfResidence, city, offer as offeredSubject, sub as subject LIMIT 1"
   )
   Person findRecommendedTutor(Long id, Double rating, List<String> subjects, Double maxPrice);
 
