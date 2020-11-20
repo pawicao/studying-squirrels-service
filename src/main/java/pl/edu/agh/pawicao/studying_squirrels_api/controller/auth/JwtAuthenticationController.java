@@ -7,6 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import pl.edu.agh.pawicao.studying_squirrels_api.config.auth.JwtTokenUtil;
@@ -49,9 +51,9 @@ public class JwtAuthenticationController {
     produces = MediaType.APPLICATION_JSON_VALUE
   )
   public ResponseEntity<?> createAuthenticationToken(JwtRequest authenticationRequest) throws Exception {
-    authenticate(authenticationRequest.getEmail(), authenticationRequest.getPassword());
+    Long userId = authenticate(authenticationRequest.getEmail(), authenticationRequest.getPassword());
     final String token = jwtTokenUtil.generateToken(authenticationRequest.getEmail());
-    return ResponseEntity.ok(new JwtResponse(token));
+    return ResponseEntity.ok(new JwtResponse(token, userId));
   }
 
   @PutMapping("/person")
@@ -70,18 +72,22 @@ public class JwtAuthenticationController {
     consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
     produces = MediaType.APPLICATION_JSON_VALUE
   )
-  public Person createPerson(RegistrationRequest person) {
+  public ResponseEntity<?> createPerson(RegistrationRequest person) {
     try {
-      return personAuthService.createPerson(person);
+      Person newPerson = personAuthService.createPerson(person);
+      final String token = jwtTokenUtil.generateToken(newPerson.getEmail());
+      return ResponseEntity.ok(new JwtResponse(token, newPerson.getId()));
     } catch (ConflictException ex) {
       throw new ResponseStatusException(
         HttpStatus.CONFLICT, ex.getMessage(), ex);
     }
   }
 
-  private void authenticate(String email, String password) throws Exception {
+  private Long authenticate(String email, String password) throws Exception {
     try {
-      authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
+      return personAuthService.getIdFromEmail(
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password)).getName()
+      );
     } catch (BadCredentialsException e) {
       throw new Exception("INVALID_CREDENTIALS", e);
     }

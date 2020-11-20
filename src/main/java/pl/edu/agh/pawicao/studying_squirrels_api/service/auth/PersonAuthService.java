@@ -50,6 +50,8 @@ public class PersonAuthService implements UserDetailsService {
     );
   }
 
+  public Long getIdFromEmail(String email) {return personRepository.findPersonByEmail(email).getId(); }
+
   public boolean checkIfEmailExists(String email) {
     return personRepository.existsByEmail(email);
   }

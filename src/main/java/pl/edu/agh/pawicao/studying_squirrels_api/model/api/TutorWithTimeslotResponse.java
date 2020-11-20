@@ -9,4 +9,5 @@ public class TutorWithTimeslotResponse {
   private BasicTutorDTO tutor;
   private String timeslot;
   private Double lowestPrice;
+  private boolean recommendation;
 }
