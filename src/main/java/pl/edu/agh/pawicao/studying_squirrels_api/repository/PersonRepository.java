@@ -51,7 +51,7 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
     "AND ($maxPrice is null OR offer.price <= $maxPrice) " +
     "RETURN tutor as person, tutorPlace as placeOfResidence, city, offer as offeredSubject, sub as subject"
   )
-  List<Person> findNearTutors(Long id, Double rating, List<String> subjects, Double maxPrice);
+  List<Person> findNearTutorsWithPostalCode(Long id, Double rating, List<String> subjects, Double maxPrice);
 
   @Query(
     "MATCH (sub:Subject)<-[offer:OFFERS]-(tutor:Person)-[tutorPlace:LIVES_IN]->" +
@@ -65,9 +65,37 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
     "AND ($subjects is null OR ANY(subject in $subjects WHERE sub.name = subject)) " +
     "AND ($maxPrice is null OR offer.price <= $maxPrice) " +
     "AND averageTutorRating > 4.0 " +
-    "RETURN tutor as person, tutorPlace as placeOfResidence, city, offer as offeredSubject, sub as subject LIMIT 1"
+    "RETURN tutor as person, tutorPlace as placeOfResidence, city, offer as offeredSubject, sub as subject " +
+    "ORDER BY averageTutorRating DESC"
   )
-  Person findRecommendedTutor(Long id, Double rating, List<String> subjects, Double maxPrice);
+  List<Person> findRecommendedTutorsWithPostalCode(Long id, Double rating, List<String> subjects, Double maxPrice);
+
+  @Query(
+    "MATCH (sub:Subject)<-[offer:OFFERS]-(tutor:Person)-[tutorPlace:LIVES_IN]->" +
+    "(city:City)<-[studentPlace:LIVES_IN]-(student:Person) " +
+    "WHERE tutor.tutor = true AND ID(student) = $id AND ID(tutor) <> $id " +
+    "AND ($rating is null OR tutor.tutorRating >= $rating) " +
+    "AND ($subjects is null OR ANY(subject in $subjects WHERE sub.name = subject)) " +
+    "AND ($maxPrice is null OR offer.price <= $maxPrice) " +
+    "RETURN tutor as person, tutorPlace as placeOfResidence, city, offer as offeredSubject, sub as subject"
+  )
+  List<Person> findNearTutors(Long id, Double rating, List<String> subjects, Double maxPrice);
+
+  @Query(
+    "MATCH (sub:Subject)<-[offer:OFFERS]-(tutor:Person)-[tutorPlace:LIVES_IN]->" +
+    "(city:City)<-[studentPlace:LIVES_IN]-(student:Person) " +
+    "MATCH (tutor)-[gave:GAVE]->(:Lesson)<-[:TOOK]-(:Person)-[:IS_FRIEND {accepted: true}]-(student) " +
+    "WITH gave, sub, offer, tutor, tutorPlace, city, studentPlace, student, " +
+    "AVG(gave.tutorRating) as averageTutorRating " +
+    "WHERE tutor.tutor = true AND ID(student) = $id AND ID(tutor) <> $id " +
+    "AND ($rating is null OR tutor.tutorRating >= $rating) " +
+    "AND ($subjects is null OR ANY(subject in $subjects WHERE sub.name = subject)) " +
+    "AND ($maxPrice is null OR offer.price <= $maxPrice) " +
+    "AND averageTutorRating > 4.0 " +
+    "RETURN tutor as person, tutorPlace as placeOfResidence, city, offer as offeredSubject, sub as subject " +
+    "ORDER BY averageTutorRating DESC"
+  )
+  List<Person> findRecommendedTutors(Long id, Double rating, List<String> subjects, Double maxPrice);
 
   @Query(
     "MATCH (p1:Person), (p2:Person) WHERE ID(p1) = $idOne AND ID(p2) = $idTwo " +

@@ -32,7 +32,8 @@ public class PersonService {
   }
 
   public List<Person> findNearTutors(Long id, Double rating, List<String> subjects, Double maxPrice) {
-    return personRepository.findNearTutors(id, rating, subjects, maxPrice);
+    List<Person> nearTutors = personRepository.findNearTutorsWithPostalCode(id, rating, subjects, maxPrice);
+    return nearTutors.isEmpty() ? personRepository.findNearTutors(id, rating, subjects, maxPrice) : nearTutors;
   }
 
   public Person findPerson(Long personId) {
@@ -99,6 +100,11 @@ public class PersonService {
   }
 
   public Person findRecommendedTutor(Long id, Double rating, List<String> subjects, Double maxPrice) {
-    return personRepository.findRecommendedTutor(id, rating, subjects, maxPrice);
+    List<Person> recommendedTutors = personRepository
+      .findRecommendedTutorsWithPostalCode(id, rating, subjects, maxPrice);
+    if(!recommendedTutors.isEmpty())
+      return recommendedTutors.get(0);
+    recommendedTutors = personRepository.findRecommendedTutors(id, rating, subjects, maxPrice);
+    return recommendedTutors.isEmpty() ? null : recommendedTutors.get(0);
   }
 }
