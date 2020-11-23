@@ -162,11 +162,11 @@ public class PersonController {
     MultipartFile newFile = FileUtils.getNewFile("person-" + id + extension, file);
     String name = storageService.store(newFile);
     String uri = ServletUriComponentsBuilder.fromCurrentContextPath()
-      .path("/api/photos/")
+      .path("/photos/")
       .path(name)
       .toUriString();
     FileResponse response = new FileResponse(name, uri, file.getContentType(), file.getSize());
-    personService.addPhotoPath(id, "/api/photos/" + name);
+    personService.addPhotoPath(id, "/photos/" + name);
     return ResponseEntity.ok(response);
   }
 

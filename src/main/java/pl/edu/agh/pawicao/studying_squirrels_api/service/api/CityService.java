@@ -13,6 +13,8 @@ public class CityService {
   private CityRepository cityRepository;
 
   public List<City> getAllCities() {
-    return cityRepository.findAll();
+    List<City> cities = cityRepository.findAll();
+    cities.sort((a, b) -> a.getName().compareToIgnoreCase(b.getName()));
+    return cities;
   }
 }
