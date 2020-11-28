@@ -4,6 +4,7 @@ package pl.edu.agh.pawicao.studying_squirrels_api.controller.api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pl.edu.agh.pawicao.studying_squirrels_api.model.api.ContactInfo;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.api.IDPairRequest;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Person;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.projection.Acquaintance.BasicAcquaintanceDTO;
@@ -47,27 +48,27 @@ public class AcquaintanceController {
   }
 
   @PostMapping("/friend")
-  ResponseEntity<BasicAcquaintanceDTO> createContactRequest(
+  ResponseEntity<ContactInfo> createContactRequest(
     @RequestBody IDPairRequest ids
   ) {
     Acquaintance acquaintance = acquaintanceService.createContactRequest(ids);
-    return ResponseEntity.ok(mapToDto(acquaintance));
+    return ResponseEntity.ok(new ContactInfo(acquaintance.getFriendOne().getId(), false));
   }
 
   @PutMapping("/friend")
-  ResponseEntity<BasicAcquaintanceDTO> acceptContactRequest(
+  ResponseEntity<ContactInfo> acceptContactRequest(
     @RequestBody IDPairRequest ids
   ) {
     Acquaintance acquaintance = acquaintanceService.acceptContactRequest(ids);
-    return ResponseEntity.ok(mapToDto(acquaintance));
+    return ResponseEntity.ok(new ContactInfo(acquaintance.getFriendOne().getId(), true));
   }
 
-  @DeleteMapping("/friend")
-  ResponseEntity<Long> deleteContact(
-    @RequestBody IDPairRequest ids
+  @DeleteMapping(value = "/friend/{idOne}")
+  ResponseEntity<ContactInfo> deleteContact(
+    @PathVariable Long idOne,
+    @RequestParam(name = "id") Long idTwo
   ) {
-    return ResponseEntity.ok(
-      acquaintanceService.deleteContact(ids)
-    );
+    acquaintanceService.deleteContact(new IDPairRequest(idOne, idTwo));
+    return ResponseEntity.ok(new ContactInfo());
   }
 }

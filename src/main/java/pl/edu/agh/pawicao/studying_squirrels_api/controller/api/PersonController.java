@@ -7,6 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import pl.edu.agh.pawicao.studying_squirrels_api.model.api.ContactInfo;
+import pl.edu.agh.pawicao.studying_squirrels_api.model.api.ContactInfoResponse;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.api.FileResponse;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.api.TutorWithTimeslotResponse;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Person;
@@ -45,21 +47,28 @@ public class PersonController {
   private StorageService storageService;
 
   @GetMapping("/person/{personId}")
-  ResponseEntity<?> findPerson(
+  ResponseEntity<ContactInfoResponse> findPerson(
     @PathVariable Long personId,
     @RequestParam(name = "id") Long myId
   ) {
-    if(personId.equals(myId) || personService.areContacts(personId, myId))
-      return ResponseEntity.ok(Mapper.map(personService.findPerson(personId), DetailedPersonAcquaintanceDTO.class));
-    return ResponseEntity.ok(Mapper.map(personService.findPerson(personId), DetailedPersonDTO.class));
+    if (personId.equals(myId)) {
+      return ResponseEntity.ok(new ContactInfoResponse(Mapper.map(personService.findPerson(personId), DetailedPersonAcquaintanceDTO.class), null));
+    }
+    ContactInfo contactInfo = personService.getContactStatus(myId, personId);
+    if(contactInfo != null && contactInfo.isAccepted()) {
+      return ResponseEntity.ok(new ContactInfoResponse(Mapper.map(personService.findPerson(personId), DetailedPersonAcquaintanceDTO.class), contactInfo));
+    } else {
+      return ResponseEntity.ok(new ContactInfoResponse(Mapper.map(personService.findPerson(personId), DetailedPersonDTO.class), contactInfo));
+    }
   }
 
   @GetMapping("/person/{personId}/ratings")
   ResponseEntity<List <RatingDTO>> getRatings(
     @PathVariable Long personId,
-    @RequestParam boolean student
+    @RequestParam boolean student,
+    @RequestParam(required = false) Long subject
   ) {
-    return ResponseEntity.ok(personService.getRatings(personId, student));
+    return ResponseEntity.ok(personService.getRatings(personId, student, subject));
   }
 
   @GetMapping("/tutors/{tutorId}/timeslots")

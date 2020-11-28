@@ -1,5 +1,6 @@
 package pl.edu.agh.pawicao.studying_squirrels_api.controller.api;
 
+import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -65,7 +66,7 @@ public class LessonController {
   }
 
   @GetMapping("/lessons/{personId}")
-  ResponseEntity<?> getLesson(
+  ResponseEntity<?> getLessons(
     @PathVariable Long personId,
     @RequestParam boolean student,
     @RequestParam (name = "date") Long dateInMillis,
@@ -81,10 +82,12 @@ public class LessonController {
   }
 
   @PostMapping("lesson/rating")
-  ResponseEntity<Lesson> setRating (
+  ResponseEntity<?> setRating (
     @RequestBody RatingRequest ratingRequest
     ) {
-    return ResponseEntity.ok(lessonService.setRating(ratingRequest));
+    if(ratingRequest.isStudent())
+      return ResponseEntity.ok(Mapper.map(lessonService.setRating(ratingRequest), LessonTutorDTO.class));
+    return ResponseEntity.ok(Mapper.map(lessonService.setRating(ratingRequest), LessonStudentDTO.class));
   }
 
   @PostMapping("lesson/homework")

@@ -26,7 +26,6 @@ public class Acquaintance {
   @EndNode
   private Person friendTwo;
 
-  @Property("since")
   private ZonedDateTime friendsSince;
 
   private boolean accepted;

@@ -15,6 +15,5 @@ public class BasicAcquaintanceDTO {
   private BasicPersonAcquaintanceDTO friendOne;
   private BasicPersonAcquaintanceDTO friendTwo;
 
-  @Property("since")
   private ZonedDateTime friendsSince;
 }

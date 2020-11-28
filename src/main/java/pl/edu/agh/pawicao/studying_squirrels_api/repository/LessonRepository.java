@@ -21,32 +21,40 @@ public interface LessonRepository extends Neo4jRepository<Lesson, Long> {
 
   @Query(
     "MATCH (student:Person)-[took:TOOK]->(lesson:Lesson)<-[gave:GAVE]-(tutor:Person) " +
-    "MATCH (homework:Homework)<-[has:HAS]-(lesson)-[isOf:IS_OF]->(subject:Subject) WHERE ID(student) = $personId " +
+    "WHERE ID(student) = $personId " +
     "AND lesson.date < datetime({timezone: 'Europe/Warsaw', epochSeconds: $dateInMillis/1000}) " +
+    "MATCH (lesson)-[isOf:IS_OF]->(subject:Subject) " +
+    "OPTIONAL MATCH (homework:Homework)<-[has:HAS]-(lesson) " +
     "RETURN student, took, lesson, gave, tutor, isOf, subject, homework, has"
   )
   List<Lesson> findAllPastLessonsForStudent(Long personId, Long dateInMillis);
 
   @Query(
     "MATCH (student:Person)-[took:TOOK]->(lesson:Lesson)<-[gave:GAVE]-(tutor:Person) " +
-    "MATCH (homework:Homework)<-[has:HAS]-(lesson)-[isOf:IS_OF]->(subject:Subject) WHERE ID(student) = $personId " +
+    "WHERE ID(student) = $personId " +
     "AND lesson.date > datetime({timezone: 'Europe/Warsaw', epochSeconds: $dateInMillis/1000}) " +
+    "MATCH (lesson)-[isOf:IS_OF]->(subject:Subject) " +
+    "OPTIONAL MATCH (homework:Homework)<-[has:HAS]-(lesson) " +
     "RETURN student, took, lesson, gave, tutor, isOf, subject, homework, has"
   )
   List<Lesson> findAllFutureLessonsForStudent(Long personId, Long dateInMillis);
 
   @Query(
     "MATCH (student:Person)-[took:TOOK]->(lesson:Lesson)<-[gave:GAVE]-(tutor:Person) " +
-    "MATCH (homework:Homework)<-[has:HAS]-(lesson)-[isOf:IS_OF]->(subject:Subject) WHERE ID(tutor) = $personId " +
+    "WHERE ID(tutor) = $personId " +
     "AND lesson.date < datetime({timezone: 'Europe/Warsaw', epochSeconds: $dateInMillis/1000}) " +
+    "MATCH (lesson)-[isOf:IS_OF]->(subject:Subject) " +
+    "OPTIONAL MATCH (homework:Homework)<-[has:HAS]-(lesson) " +
     "RETURN student, took, lesson, gave, tutor, isOf, subject, homework, has"
   )
   List<Lesson> findAllPastLessonsForTutor(Long personId, Long dateInMillis);
 
   @Query(
     "MATCH (student:Person)-[took:TOOK]->(lesson:Lesson)<-[gave:GAVE]-(tutor:Person) " +
-    "MATCH (homework:Homework)<-[has:HAS]-(lesson)-[isOf:IS_OF]->(subject:Subject) WHERE ID(tutor) = $personId " +
+    "WHERE ID(tutor) = $personId " +
     "AND lesson.date > datetime({timezone: 'Europe/Warsaw', epochSeconds: $dateInMillis/1000}) " +
+    "MATCH (lesson)-[isOf:IS_OF]->(subject:Subject) " +
+    "OPTIONAL MATCH (homework:Homework)<-[has:HAS]-(lesson) " +
     "RETURN student, took, lesson, gave, tutor, isOf, subject, homework, has"
   )
   List<Lesson> findAllFutureLessonsForTutor(Long personId, Long dateInMillis);
@@ -71,16 +79,16 @@ public interface LessonRepository extends Neo4jRepository<Lesson, Long> {
 
   @Query(
     "MATCH (tutor:Person)-[gave:GAVE]->(lesson:Lesson)<-[took:TOOK]-(student:Person) WHERE ID(lesson) = $lessonId " +
-    "SET gave.tutorRating = $rating, gave.tutorRatingDescription = $ratingDescription, " +
-    "tutor.tutorRating = (tutor.tutorRatingsGiven * tutor.tutorRating - gave.tutorRating + $rating)/tutor.tutorRatingsGiven " +
+    "SET tutor.tutorRating = (tutor.tutorRatingsGiven * tutor.tutorRating - gave.tutorRating + $rating)/tutor.tutorRatingsGiven, " +
+    "gave.tutorRating = $rating, gave.tutorRatingDescription = $ratingDescription " +
     "RETURN lesson, gave, tutor"
   )
   Lesson alterTutorRating(Long lessonId, Double rating, String ratingDescription);
 
   @Query(
     "MATCH (tutor:Person)-[gave:GAVE]->(lesson:Lesson)<-[took:TOOK]-(student:Person) WHERE ID(lesson) = $lessonId " +
-    "SET took.studentRating = $rating, took.studentRatingDescription = $ratingDescription, " +
-    "student.studentRating = (student.studentRatingsGiven * student.studentRating - took.studentRating + $rating)/student.studentRatingsGiven " +
+    "SET student.studentRating = (student.studentRatingsGiven * student.studentRating - took.studentRating + $rating)/student.studentRatingsGiven, " +
+    "took.studentRating = $rating, took.studentRatingDescription = $ratingDescription " +
     "RETURN lesson, took, student"
   )
   Lesson alterStudentRating(Long lessonId, Double rating, String ratingDescription);

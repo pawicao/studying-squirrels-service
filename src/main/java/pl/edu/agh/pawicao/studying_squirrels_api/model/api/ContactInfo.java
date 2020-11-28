@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data @AllArgsConstructor @NoArgsConstructor
-public class IDPairRequest {
-  private Long idOne;
-  private Long idTwo;
+public class ContactInfo {
+  private Long initiator;
+  private boolean accepted;
 }

@@ -2,14 +2,18 @@ package pl.edu.agh.pawicao.studying_squirrels_api.service.api;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import pl.edu.agh.pawicao.studying_squirrels_api.model.api.ContactInfo;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Person;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.projection.Person.BasicPersonDTO;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.projection.RatingDTO;
+import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.Acquaintance;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.Offer;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.projection.Offer.OfferDTO;
+import pl.edu.agh.pawicao.studying_squirrels_api.repository.AcquaintanceRepository;
 import pl.edu.agh.pawicao.studying_squirrels_api.repository.PersonRepository;
 
 import javax.security.auth.Subject;
+import java.awt.*;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -22,6 +26,9 @@ public class PersonService {
 
   @Autowired
   private PersonRepository personRepository;
+
+  @Autowired
+  private AcquaintanceRepository acquaintanceRepository;
 
   public List<Person> findAllByTutorIsTrue() {
     return personRepository.findAllByTutorIsTrue();
@@ -40,12 +47,17 @@ public class PersonService {
     return personRepository.findById(personId).get();
   }
 
-  public boolean areContacts(Long idOne, Long idTwo) {
-    return personRepository.areContacts(idOne, idTwo);
+  public ContactInfo getContactStatus(Long idOne, Long idTwo) {
+    Acquaintance acquaintance = acquaintanceRepository.getContactStatus(idOne, idTwo);
+    if(acquaintance == null) return null;
+    return new ContactInfo(
+      acquaintance.getFriendOne().getId(),
+      acquaintance.isAccepted()
+    );
   }
 
-  public List<RatingDTO> getRatings(Long personId, boolean student) {
-    return student ? personRepository.getStudentRatings(personId) : personRepository.getTutorRatings(personId);
+  public List<RatingDTO> getRatings(Long personId, boolean student, Long subject) {
+    return student ? personRepository.getStudentRatings(personId, subject) : personRepository.getTutorRatings(personId, subject);
   }
 
   public List<ZonedDateTime> getBusyTimeslots(Long tutorId, Long dateInMillis) {

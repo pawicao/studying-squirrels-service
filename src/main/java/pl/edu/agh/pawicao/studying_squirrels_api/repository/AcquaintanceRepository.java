@@ -12,7 +12,7 @@ public interface AcquaintanceRepository extends Neo4jRepository<Acquaintance, Lo
   @Query(
     "MATCH (me:Person), (someone:Person) " +
     "WHERE ID(me) = $idOne AND ID(someone) = $idTwo " +
-    "CREATE (me)-[a:IS_FRIEND {accepted: false, since: date()}]->(someone) " +
+    "CREATE (me)-[a:IS_FRIEND {accepted: false, friendsSince: datetime({timezone: 'Europe/Warsaw'})}]->(someone) " +
     "RETURN a, me, someone"
   )
   Acquaintance createContactRequest(Long idOne, Long idTwo);
@@ -32,6 +32,11 @@ public interface AcquaintanceRepository extends Neo4jRepository<Acquaintance, Lo
     "RETURN ID(a)"
   )
   Long deleteContact(Long idOne, Long idTwo);
+
+  @Query(
+    "MATCH (p1:Person)-[i:IS_FRIEND]-(p2:Person) WHERE ID(p1) = $idOne AND ID(p2) = $idTwo RETURN p1, i, p2"
+  )
+  Acquaintance getContactStatus(Long idOne, Long idTwo);
 
   @Query(
     "MATCH (n:Person)-[:IS_FRIEND {accepted: true}]-(m:Person) " +

@@ -12,4 +12,6 @@ public class RatingDTO {
   String ratingDescription;
   ZonedDateTime date;
   String subject;
+  String subjectIcon;
+  String issuerName;
 }
