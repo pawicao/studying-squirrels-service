@@ -15,8 +15,8 @@ public class GivenLesson {
   private Long id;
 
   @JsonIgnoreProperties({
-    "takenLessons", "givenLessons", "email", "password", "dateOfBirth", "student", "studentRating",
-    "studentRatingsGiven", "phone", "offeredSubjects", "sentMessages", "receivedMessages", "friendshipsInitiated",
+    "takenLessons", "givenLessons", "password", "dateOfBirth", "student", "studentRating",
+    "studentRatingsGiven", "offeredSubjects", "sentMessages", "receivedMessages", "friendshipsInitiated",
     "friendshipsReceived", "placeOfResidence"
   })
   @StartNode

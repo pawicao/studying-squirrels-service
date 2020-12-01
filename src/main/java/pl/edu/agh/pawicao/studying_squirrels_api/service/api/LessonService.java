@@ -130,4 +130,8 @@ public class LessonService {
     homework.setAttachments(attachments);
     return homeworkRepository.save(homework);
   }
+
+  public List<Homework> getHomeworks(Long personId, boolean student) {
+    return student ? homeworkRepository.getReceivedHomeworks(personId) : homeworkRepository.getGivenHomeworks(personId);
+  }
 }

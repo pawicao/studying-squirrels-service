@@ -5,8 +5,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.api.ContactInfo;
+import pl.edu.agh.pawicao.studying_squirrels_api.model.api.ContactInfoResponse;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.api.IDPairRequest;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Person;
+import pl.edu.agh.pawicao.studying_squirrels_api.model.node.projection.Person.DetailedPersonAcceptDTO;
+import pl.edu.agh.pawicao.studying_squirrels_api.model.node.projection.Person.DetailedPersonDTO;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.projection.Acquaintance.BasicAcquaintanceDTO;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.projection.Person.BasicPersonAcquaintanceDTO;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.Acquaintance;
@@ -56,11 +59,15 @@ public class AcquaintanceController {
   }
 
   @PutMapping("/friend")
-  ResponseEntity<ContactInfo> acceptContactRequest(
+  ResponseEntity<ContactInfoResponse> acceptContactRequest(
     @RequestBody IDPairRequest ids
   ) {
     Acquaintance acquaintance = acquaintanceService.acceptContactRequest(ids);
-    return ResponseEntity.ok(new ContactInfo(acquaintance.getFriendOne().getId(), true));
+    return ResponseEntity.ok(
+      new ContactInfoResponse(Mapper.map(
+        acquaintance.getFriendOne(), DetailedPersonAcceptDTO.class),
+        new ContactInfo(acquaintance.getFriendOne().getId(), true)
+      ));
   }
 
   @DeleteMapping(value = "/friend/{idOne}")

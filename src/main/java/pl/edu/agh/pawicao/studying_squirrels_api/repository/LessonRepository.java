@@ -22,7 +22,7 @@ public interface LessonRepository extends Neo4jRepository<Lesson, Long> {
   @Query(
     "MATCH (student:Person)-[took:TOOK]->(lesson:Lesson)<-[gave:GAVE]-(tutor:Person) " +
     "WHERE ID(student) = $personId " +
-    "AND lesson.date < datetime({timezone: 'Europe/Warsaw', epochSeconds: $dateInMillis/1000}) " +
+    "AND (lesson.date < datetime({timezone: 'Europe/Warsaw', epochSeconds: $dateInMillis/1000}) OR lesson.canceled = true) " +
     "MATCH (lesson)-[isOf:IS_OF]->(subject:Subject) " +
     "OPTIONAL MATCH (homework:Homework)<-[has:HAS]-(lesson) " +
     "RETURN student, took, lesson, gave, tutor, isOf, subject, homework, has"
@@ -32,7 +32,7 @@ public interface LessonRepository extends Neo4jRepository<Lesson, Long> {
   @Query(
     "MATCH (student:Person)-[took:TOOK]->(lesson:Lesson)<-[gave:GAVE]-(tutor:Person) " +
     "WHERE ID(student) = $personId " +
-    "AND lesson.date > datetime({timezone: 'Europe/Warsaw', epochSeconds: $dateInMillis/1000}) " +
+    "AND lesson.date > datetime({timezone: 'Europe/Warsaw', epochSeconds: $dateInMillis/1000}) AND NOT lesson.canceled = true " +
     "MATCH (lesson)-[isOf:IS_OF]->(subject:Subject) " +
     "OPTIONAL MATCH (homework:Homework)<-[has:HAS]-(lesson) " +
     "RETURN student, took, lesson, gave, tutor, isOf, subject, homework, has"
@@ -42,7 +42,7 @@ public interface LessonRepository extends Neo4jRepository<Lesson, Long> {
   @Query(
     "MATCH (student:Person)-[took:TOOK]->(lesson:Lesson)<-[gave:GAVE]-(tutor:Person) " +
     "WHERE ID(tutor) = $personId " +
-    "AND lesson.date < datetime({timezone: 'Europe/Warsaw', epochSeconds: $dateInMillis/1000}) " +
+    "AND (lesson.date < datetime({timezone: 'Europe/Warsaw', epochSeconds: $dateInMillis/1000}) OR lesson.canceled = true) " +
     "MATCH (lesson)-[isOf:IS_OF]->(subject:Subject) " +
     "OPTIONAL MATCH (homework:Homework)<-[has:HAS]-(lesson) " +
     "RETURN student, took, lesson, gave, tutor, isOf, subject, homework, has"
@@ -52,7 +52,7 @@ public interface LessonRepository extends Neo4jRepository<Lesson, Long> {
   @Query(
     "MATCH (student:Person)-[took:TOOK]->(lesson:Lesson)<-[gave:GAVE]-(tutor:Person) " +
     "WHERE ID(tutor) = $personId " +
-    "AND lesson.date > datetime({timezone: 'Europe/Warsaw', epochSeconds: $dateInMillis/1000}) " +
+    "AND lesson.date > datetime({timezone: 'Europe/Warsaw', epochSeconds: $dateInMillis/1000}) AND NOT lesson.canceled = true " +
     "MATCH (lesson)-[isOf:IS_OF]->(subject:Subject) " +
     "OPTIONAL MATCH (homework:Homework)<-[has:HAS]-(lesson) " +
     "RETURN student, took, lesson, gave, tutor, isOf, subject, homework, has"

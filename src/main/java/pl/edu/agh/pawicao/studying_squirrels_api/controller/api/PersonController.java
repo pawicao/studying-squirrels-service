@@ -2,6 +2,7 @@ package pl.edu.agh.pawicao.studying_squirrels_api.controller.api;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
+import org.springframework.http.CacheControl;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +31,7 @@ import java.io.InputStream;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 
@@ -68,6 +70,9 @@ public class PersonController {
     @RequestParam boolean student,
     @RequestParam(required = false) Long subject
   ) {
+    System.out.println(personId);
+    System.out.println(student);
+    System.out.println(subject);
     return ResponseEntity.ok(personService.getRatings(personId, student, subject));
   }
 
@@ -165,17 +170,21 @@ public class PersonController {
   public ResponseEntity<FileResponse> uploadPhoto(
     @RequestParam("file") MultipartFile file,
     @RequestParam Long id
-  ) {
+  ) throws IOException {
     String extension = Objects.requireNonNull(file.getOriginalFilename())
       .substring(file.getOriginalFilename().lastIndexOf("."));
-    MultipartFile newFile = FileUtils.getNewFile("person-" + id + extension, file);
+    long randomNumber = new Date().getTime();
+    MultipartFile newFile = FileUtils.getNewFile("person-" + id + '-' + randomNumber + extension, file);
     String name = storageService.store(newFile);
     String uri = ServletUriComponentsBuilder.fromCurrentContextPath()
       .path("/photos/")
       .path(name)
       .toUriString();
     FileResponse response = new FileResponse(name, uri, file.getContentType(), file.getSize());
-    personService.addPhotoPath(id, "/photos/" + name);
+    String oldPhotopath = personService.addPhotoPath(id, "/photos/" + name);
+    if (oldPhotopath != null) {
+      storageService.delete(oldPhotopath.substring(8));
+    }
     return ResponseEntity.ok(response);
   }
 

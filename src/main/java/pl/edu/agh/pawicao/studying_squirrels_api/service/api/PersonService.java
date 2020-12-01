@@ -68,8 +68,8 @@ public class PersonService {
     return personRepository.getBusyTimeslots(tutorId);
   }
 
-  public void addPhotoPath(Long personId, String photoPath) {
-    personRepository.setPhotoPath(personId, photoPath);
+  public String addPhotoPath(Long personId, String photoPath) {
+    return personRepository.setPhotoPath(personId, photoPath);
   }
 
   public String findFirstTimeslot(Person tutor) {
@@ -100,6 +100,9 @@ public class PersonService {
         continue;
       }
       for(String timeslot : slots.get(dayOfWeek)) {
+        if (timeslot.isEmpty()) {
+          continue;
+        }
         ZonedDateTime resultTime = tmpDate
           .withHour(Integer.parseInt(timeslot.substring(0,2))).withMinute(0).withSecond(0).withNano(0);
         if(busyTimeslots.contains(resultTime) || resultTime.isBefore(now)) {

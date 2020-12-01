@@ -4,6 +4,8 @@ import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Homework;
 
+import java.util.List;
+
 public interface HomeworkRepository extends Neo4jRepository<Homework, Long> {
   @Query(
     "MATCH (lesson:Lesson)-[isOf:IS_OF]->(subject:Subject) WHERE ID(lesson) = $lessonId " +
@@ -39,4 +41,18 @@ public interface HomeworkRepository extends Neo4jRepository<Homework, Long> {
     "MATCH (attachment:Attachment) WHERE ID(attachment) = $id DETACH DELETE attachment"
   )
   void deleteAttachment(Long id);
+
+  @Query(
+    "MATCH (h:Homework)<-[has:HAS]-(l:Lesson)-[isOf:IS_OF]->(s:Subject) " +
+    "MATCH (tutor:Person)-[gave:GAVE]->(l)<-[took:TOOK]-(p:Person) WHERE ID(p) = $personId " +
+    "RETURN h, has, l, isOf, s, gave, tutor"
+  )
+  List<Homework> getReceivedHomeworks(Long personId);
+
+  @Query(
+    "MATCH (h:Homework)<-[has:HAS]-(l:Lesson)-[isOf:IS_OF]->(s:Subject) " +
+    "MATCH (student:Person)-[took:TOOK]->(l)<-[gave:GAVE]-(p:Person) WHERE ID(p) = $personId " +
+    "RETURN h, has, l, isOf, s, student, took"
+  )
+  List<Homework> getGivenHomeworks(Long personId);
 }

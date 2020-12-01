@@ -10,4 +10,14 @@ public class FileResponse {
   private String uri;
   private String type;
   private long size;
+
+  @Override
+  public String toString() {
+    return "FileResponse{" +
+           "name='" + name + '\'' +
+           ", uri='" + uri + '\'' +
+           ", type='" + type + '\'' +
+           ", size=" + size +
+           '}';
+  }
 }

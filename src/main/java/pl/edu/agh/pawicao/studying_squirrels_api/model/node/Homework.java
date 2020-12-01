@@ -30,7 +30,7 @@ public class Homework {
   @Relationship(type = "CONTAINS")
   private List<Attachment> attachments = new ArrayList<>();
 
-  @JsonIgnoreProperties({"homeworks", "givenLesson", "takenLesson", "place"})
+  @JsonIgnoreProperties({"homeworks", "place"})
   @Relationship(type = "HAS", direction = "INCOMING")
   private Lesson lesson;
 

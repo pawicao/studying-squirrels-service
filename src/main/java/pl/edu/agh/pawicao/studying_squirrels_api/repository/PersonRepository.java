@@ -82,11 +82,13 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
   List<Person> findNearTutors(Long id, Double rating, List<String> subjects, Double maxPrice);
 
   @Query(
-    "MATCH (sub:Subject)<-[offer:OFFERS]-(tutor:Person)-[tutorPlace:LIVES_IN]->" +
-    "(city:City)<-[studentPlace:LIVES_IN]-(student:Person) " +
-    "MATCH (tutor)-[gave:GAVE]->(:Lesson)<-[:TOOK]-(:Person)-[:IS_FRIEND {accepted: true}]-(student) " +
-    "WITH gave, sub, offer, tutor, tutorPlace, city, studentPlace, student, " +
-    "AVG(gave.tutorRating) as averageTutorRating " +
+    "MATCH (tutor:Person)-[gave:GAVE]->(l:Lesson)<-[t:TOOK]-(:Person)-[:IS_FRIEND {accepted: true}]-(student:Person) " +
+    "WITH gave, tutor, student, " +
+    "COLLECT(gave.tutorRating) as averageTutorRatingList " +
+    "MATCH (sub:Subject)<-[offer:OFFERS]-(tutor)-[tutorPlace:LIVES_IN]->" +
+    "(city:City)<-[studentPlace:LIVES_IN]-(student) " +
+    "UNWIND averageTutorRatingList as values " +
+    "WITH AVG(values) as averageTutorRating, tutor, student, sub, offer, tutorPlace, city " +
     "WHERE tutor.tutor = true AND ID(student) = $id AND ID(tutor) <> $id " +
     "AND ($rating is null OR tutor.tutorRating >= $rating) " +
     "AND ($subjects is null OR ANY(subject in $subjects WHERE sub.name = subject)) " +
@@ -107,7 +109,7 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
     "MATCH (n:Person)-[took:TOOK]->(lesson:Lesson)-[isOf:IS_OF]->(subject:Subject) " +
     "MATCH (issuer:Person)-[:GAVE]->(lesson) " +
     "WHERE ID(n) = $personId and EXISTS(took.tutorRating) " +
-    "AND ($subjectId is null OR subject.id = $subjectId) " +
+    "AND ($subjectId is null OR ID(subject) = $subjectId) " +
     "RETURN took.tutorRating as rating, took.tutorRatingDescription AS ratingDescription, " +
     "lesson.date AS date, subject.name AS subject, subject.icon AS subjectIcon, issuer.firstName AS issuerName"
   )
@@ -117,7 +119,7 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
     "MATCH (n:Person)-[gave:GAVE]->(lesson:Lesson)-[isOf:IS_OF]->(subject:Subject) " +
     "MATCH (issuer:Person)-[:TOOK]->(lesson) " +
     "WHERE ID(n) = $personId and EXISTS(gave.tutorRating) " +
-    "AND ($subjectId is null OR subject.id = $subjectId) " +
+    "AND ($subjectId is null OR ID(subject) = $subjectId) " +
     "RETURN gave.tutorRating as rating, gave.tutorRatingDescription AS ratingDescription, " +
     "lesson.date AS date, subject.name AS subject, subject.icon AS subjectIcon, issuer.firstName AS issuerName"
   )
@@ -138,7 +140,7 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
   List<ZonedDateTime> getBusyTimeslots(Long tutorId);
 
   @Query(
-    "MATCH (n:Person) WHERE ID(n) = $personId SET n.photoPath = $photoPath"
+    "MATCH (n:Person) WHERE ID(n) = $personId WITH n, n.photoPath as old SET n.photoPath = $photoPath RETURN old"
   )
-  Person setPhotoPath(Long personId, String photoPath);
+  String setPhotoPath(Long personId, String photoPath);
 }

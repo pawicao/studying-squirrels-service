@@ -34,7 +34,13 @@ public class LessonController {
   ResponseEntity<Lesson> requestLesson(
     @RequestBody LessonRequest lessonRequest
     ) {
-    return ResponseEntity.ok(lessonService.requestLesson(lessonRequest));
+    Lesson lesson = lessonService.requestLesson(lessonRequest);
+    lesson.getTakenLesson().getStudent().setPhone("");
+    lesson.getTakenLesson().getStudent().setEmail("");
+    lesson.setPlace(null);
+    lesson.getGivenLesson().getTutor().setPhone("");
+    lesson.getGivenLesson().getTutor().setEmail("");
+    return ResponseEntity.ok(lesson);
   }
 
   @PutMapping("/lesson/{lessonId}/confirm")
@@ -48,7 +54,13 @@ public class LessonController {
   ResponseEntity<Lesson> cancelLesson(
     @PathVariable Long lessonId
   ) {
-    return ResponseEntity.ok(lessonService.cancelLesson(lessonId));
+    Lesson lesson = lessonService.cancelLesson(lessonId);
+    lesson.setPlace(null);
+    lesson.getTakenLesson().getStudent().setPhone("");
+    lesson.getTakenLesson().getStudent().setEmail("");
+    lesson.getGivenLesson().getTutor().setPhone("");
+    lesson.getGivenLesson().getTutor().setEmail("");
+    return ResponseEntity.ok(lesson);
   }
 
   @PutMapping("/lesson/description")
@@ -62,7 +74,15 @@ public class LessonController {
   ResponseEntity<Lesson> getLesson(
     @PathVariable Long lessonId
   ) {
-    return ResponseEntity.ok(lessonService.getLesson(lessonId));
+    Lesson lesson = lessonService.getLesson(lessonId);
+    if (!lesson.isConfirmed() || lesson.isCanceled()) {
+      lesson.getTakenLesson().getStudent().setPhone("");
+      lesson.getTakenLesson().getStudent().setEmail("");
+      lesson.getGivenLesson().getTutor().setPhone("");
+      lesson.getGivenLesson().getTutor().setEmail("");
+      lesson.setPlace(null);
+    }
+    return ResponseEntity.ok(lesson);
   }
 
   @GetMapping("/lessons/{personId}")
@@ -88,6 +108,14 @@ public class LessonController {
     if(ratingRequest.isStudent())
       return ResponseEntity.ok(Mapper.map(lessonService.setRating(ratingRequest), LessonTutorDTO.class));
     return ResponseEntity.ok(Mapper.map(lessonService.setRating(ratingRequest), LessonStudentDTO.class));
+  }
+
+  @GetMapping("lesson/homeworks/{personId}")
+  ResponseEntity<List<Homework>> getHomeworks(
+    @PathVariable Long personId,
+    @RequestParam boolean student
+  ) {
+    return ResponseEntity.ok(lessonService.getHomeworks(personId, student));
   }
 
   @PostMapping("lesson/homework")
@@ -120,10 +148,12 @@ public class LessonController {
     @RequestParam(name = "date") Long dateInMillis,
     @RequestParam String solution
   ) {
-    MultipartFile newFile = FileUtils.getNewFile("hmwk-" + id + "-" + file.getOriginalFilename(), file);
-    String name = storageService.store(newFile);
     List<String> paths = new ArrayList<>();
-    paths.add("/api/attachments/" + name);
+    if (file != null) {
+      MultipartFile newFile = FileUtils.getNewFile("hmwk-" + id + "-" + file.getOriginalFilename(), file);
+      String name = storageService.store(newFile);
+      paths.add("/api/attachments/" + name);
+    }
     return ResponseEntity.ok(
       lessonService.addHomework(id, dateInMillis, solution, paths)
     );

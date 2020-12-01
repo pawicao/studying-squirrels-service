@@ -22,9 +22,12 @@ public class SubjectService {
   }
 
   public Subject createSubject(String name) {
-    Subject subject = new Subject();
-    subject.setName(name);
-    subject.setIcon("book");
+    Subject subject = subjectRepository.findByName(name);
+    if (subject == null) {
+      subject = new Subject();
+      subject.setName(name);
+      subject.setIcon("book");
+    }
     return subjectRepository.save(subject);
   }
 }
