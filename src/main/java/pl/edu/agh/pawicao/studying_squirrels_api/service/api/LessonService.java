@@ -51,12 +51,12 @@ public class LessonService {
   }
 
   public List<Lesson> getLessonsForStudent(Long personId, Long dateInMillis, boolean past) {
-    return past ? lessonRepository.findAllPastLessonsForStudent(personId, dateInMillis) :
+    return past ? adjustOutdatedLessons(lessonRepository.findAllPastLessonsForStudent(personId, dateInMillis)) :
       lessonRepository.findAllFutureLessonsForStudent(personId, dateInMillis);
   }
 
   public List<Lesson> getLessonsForTutor(Long personId, Long dateInMillis, boolean past) {
-    return past ? lessonRepository.findAllPastLessonsForTutor(personId, dateInMillis) :
+    return past ? adjustOutdatedLessons(lessonRepository.findAllPastLessonsForTutor(personId, dateInMillis)) :
       lessonRepository.findAllFutureLessonsForTutor(personId, dateInMillis);
   }
 
@@ -133,5 +133,14 @@ public class LessonService {
 
   public List<Homework> getHomeworks(Long personId, boolean student) {
     return student ? homeworkRepository.getReceivedHomeworks(personId) : homeworkRepository.getGivenHomeworks(personId);
+  }
+
+  private List<Lesson> adjustOutdatedLessons (List<Lesson> lessonList) {
+    for (Lesson lesson: lessonList) {
+      if (!lesson.isConfirmed()) {
+        lesson.setCanceled(true);
+      }
+    }
+    return lessonList;
   }
 }
