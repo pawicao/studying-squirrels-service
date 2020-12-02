@@ -70,9 +70,6 @@ public class PersonController {
     @RequestParam boolean student,
     @RequestParam(required = false) Long subject
   ) {
-    System.out.println(personId);
-    System.out.println(student);
-    System.out.println(subject);
     return ResponseEntity.ok(personService.getRatings(personId, student, subject));
   }
 

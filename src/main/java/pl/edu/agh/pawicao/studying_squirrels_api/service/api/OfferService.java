@@ -30,10 +30,14 @@ public class OfferService {
   public Offer createOffer(OfferRequest offerRequest) {
     Person tutor = personRepository.findById(offerRequest.getTutorId()).get();
     Subject subject = subjectRepository.findById(offerRequest.getSubjectId()).get();
-    Offer offer = new Offer();
+    Offer offer = offerRepository.findBySubjectIdAndTutorId(offerRequest.getSubjectId(), offerRequest.getTutorId());
+    if (offer == null) {
+      offer = new Offer();
+      offer.setSubject(subject);
+      offer.setTutor(tutor);
+    }
+    offer.setActive(true);
     offer.setPrice(offerRequest.getPrice());
-    offer.setSubject(subject);
-    offer.setTutor(tutor);
     Map<String, String> slotsAsString = offerRequest.getSlots().entrySet().stream().collect(Collectors.toMap(
       e -> e.getKey(),
       e -> String.join(",", e.getValue())
@@ -62,7 +66,7 @@ public class OfferService {
   }
 
   public Long deleteOffer(Long offerId) {
-    offerRepository.deleteById(offerId);
+    offerRepository.deleteOfferById(offerId);
     return offerId;
   }
 }

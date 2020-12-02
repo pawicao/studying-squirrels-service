@@ -28,6 +28,8 @@ public class Offer {
 
   private Double price;
 
+  private boolean active = true;
+
   @Properties(allowCast = true)
   private Map<String, String> timeslots = new HashMap<>();
 }

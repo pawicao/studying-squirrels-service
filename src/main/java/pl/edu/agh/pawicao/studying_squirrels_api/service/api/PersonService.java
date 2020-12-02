@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalDouble;
+import java.util.stream.Collectors;
 
 @Service
 public class PersonService {
@@ -44,7 +45,11 @@ public class PersonService {
   }
 
   public Person findPerson(Long personId) {
-    return personRepository.findById(personId).get();
+    Person person = personRepository.findById(personId).get();
+    person.setOfferedSubjects(
+      person.getOfferedSubjects().stream().filter(offer -> offer.isActive()).collect(Collectors.toList())
+    );
+    return person;
   }
 
   public ContactInfo getContactStatus(Long idOne, Long idTwo) {

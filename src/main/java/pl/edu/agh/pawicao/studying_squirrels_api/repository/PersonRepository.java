@@ -17,8 +17,6 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
 
   List<Person> findAllByTutorIsTrue();
 
-  // TODO: Sorting in front-end
-
   @Query(
     "CREATE (n:Person {email: $email, password: $password, firstName: $firstName, " +
     "lastName: $lastName, phone: $phone, photoPath: null, student: $student, " +
@@ -31,7 +29,7 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
   );
 
   @Query(
-    "MATCH (sub:Subject)<-[offer:OFFERS]-(tutor:Person)-[tutorPlace:LIVES_IN]->(tutorCity:City), (student:Person) " +
+    "MATCH (sub:Subject)<-[offer:OFFERS {active: true}]-(tutor:Person)-[tutorPlace:LIVES_IN]->(tutorCity:City), (student:Person) " +
     "WHERE tutor.tutor = true AND ID(student) = $id AND ID(tutor) <> $id " +
     "AND ($cityName is null OR tutorCity.name = $cityName) " +
     "AND ($rating is null OR tutor.tutorRating >= $rating) " +
@@ -42,7 +40,7 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
   List<Person> findTutors(Long id, String cityName, Double rating, List<String> subjects, Double maxPrice);
 
   @Query(
-    "MATCH (sub:Subject)<-[offer:OFFERS]-(tutor:Person)-[tutorPlace:LIVES_IN]->" +
+    "MATCH (sub:Subject)<-[offer:OFFERS {active: true}]-(tutor:Person)-[tutorPlace:LIVES_IN]->" +
     "(city:City)<-[studentPlace:LIVES_IN]-(student:Person) " +
     "WHERE tutor.tutor = true AND ID(student) = $id AND ID(tutor) <> $id " +
     "AND tutorPlace.postalCode = studentPlace.postalCode " +
@@ -54,7 +52,7 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
   List<Person> findNearTutorsWithPostalCode(Long id, Double rating, List<String> subjects, Double maxPrice);
 
   @Query(
-    "MATCH (sub:Subject)<-[offer:OFFERS]-(tutor:Person)-[tutorPlace:LIVES_IN]->" +
+    "MATCH (sub:Subject)<-[offer:OFFERS {active: true}]-(tutor:Person)-[tutorPlace:LIVES_IN]->" +
     "(city:City)<-[studentPlace:LIVES_IN]-(student:Person) " +
     "MATCH (tutor)-[gave:GAVE]->(:Lesson)<-[:TOOK]-(:Person)-[:IS_FRIEND {accepted: true}]-(student) " +
     "WITH gave, sub, offer, tutor, tutorPlace, city, studentPlace, student, " +
@@ -71,7 +69,7 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
   List<Person> findRecommendedTutorsWithPostalCode(Long id, Double rating, List<String> subjects, Double maxPrice);
 
   @Query(
-    "MATCH (sub:Subject)<-[offer:OFFERS]-(tutor:Person)-[tutorPlace:LIVES_IN]->" +
+    "MATCH (sub:Subject)<-[offer:OFFERS {active: true}]-(tutor:Person)-[tutorPlace:LIVES_IN]->" +
     "(city:City)<-[studentPlace:LIVES_IN]-(student:Person) " +
     "WHERE tutor.tutor = true AND ID(student) = $id AND ID(tutor) <> $id " +
     "AND ($rating is null OR tutor.tutorRating >= $rating) " +
@@ -85,7 +83,7 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
     "MATCH (tutor:Person)-[gave:GAVE]->(l:Lesson)<-[t:TOOK]-(:Person)-[:IS_FRIEND {accepted: true}]-(student:Person) " +
     "WITH gave, tutor, student, " +
     "COLLECT(gave.tutorRating) as averageTutorRatingList " +
-    "MATCH (sub:Subject)<-[offer:OFFERS]-(tutor)-[tutorPlace:LIVES_IN]->" +
+    "MATCH (sub:Subject)<-[offer:OFFERS {active: true}]-(tutor)-[tutorPlace:LIVES_IN]->" +
     "(city:City)<-[studentPlace:LIVES_IN]-(student) " +
     "UNWIND averageTutorRatingList as values " +
     "WITH AVG(values) as averageTutorRating, tutor, student, sub, offer, tutorPlace, city " +
