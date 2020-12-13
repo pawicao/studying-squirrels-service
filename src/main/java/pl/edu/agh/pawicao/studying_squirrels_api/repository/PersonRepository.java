@@ -20,7 +20,7 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
   @Query("MATCH (n:Person) WHERE ID(n) = $id SET n.student = true RETURN true")
   boolean makeStudent(Long id);
 
-  @Query("MATCH (n:Person) WHERE ID(n) = $id SET n.student = true RETURN true")
+  @Query("MATCH (n:Person) WHERE ID(n) = $id SET n.tutor = true RETURN true")
   boolean makeTutor(Long id);
 
   @Query(
