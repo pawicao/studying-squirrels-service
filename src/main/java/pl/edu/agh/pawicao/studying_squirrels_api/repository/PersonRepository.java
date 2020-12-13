@@ -17,6 +17,12 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
 
   List<Person> findAllByTutorIsTrue();
 
+  @Query("MATCH (n:Person) WHERE ID(n) = $id SET n.student = true RETURN true")
+  boolean makeStudent(Long id);
+
+  @Query("MATCH (n:Person) WHERE ID(n) = $id SET n.student = true RETURN true")
+  boolean makeTutor(Long id);
+
   @Query(
     "CREATE (n:Person {email: $email, password: $password, firstName: $firstName, " +
     "lastName: $lastName, phone: $phone, photoPath: null, student: $student, " +

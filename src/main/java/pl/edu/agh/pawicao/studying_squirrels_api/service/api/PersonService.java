@@ -127,4 +127,8 @@ public class PersonService {
     recommendedTutors = personRepository.findRecommendedTutors(id, rating, subjects, maxPrice);
     return recommendedTutors.isEmpty() ? null : recommendedTutors.get(0);
   }
+
+  public boolean changeStatus(Long personId, boolean student) {
+    return student ? personRepository.makeStudent(personId) : personRepository.makeTutor(personId);
+  }
 }

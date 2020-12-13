@@ -48,6 +48,14 @@ public class PersonController {
   @Autowired
   private StorageService storageService;
 
+  @PutMapping("/person/status/{personId}")
+  ResponseEntity<Boolean> changeStatus(
+    @PathVariable Long personId,
+    @RequestParam boolean student
+  ) {
+    return ResponseEntity.ok(personService.changeStatus(personId, student));
+  }
+
   @GetMapping("/person/{personId}")
   ResponseEntity<ContactInfoResponse> findPerson(
     @PathVariable Long personId,
