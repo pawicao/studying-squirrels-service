@@ -6,8 +6,20 @@ import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Homework;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Lesson;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface LessonRepository extends Neo4jRepository<Lesson, Long> {
+
+  @Query(
+    "MATCH (student:Person)-[took:TOOK]->(lesson:Lesson)<-[gave:GAVE]-(tutor:Person) " +
+    "MATCH (placeOfLesson:City)<-[wasIn:WAS_IN]-(lesson)-[isOf:IS_OF]->(subject:Subject) " +
+    "WHERE ID(lesson) = $id " +
+    "OPTIONAL MATCH (lesson)-[has:HAS]->(homework:Homework) " +
+    "OPTIONAL MATCH (homework)-[contains:CONTAINS]->(attachment:Attachment) " +
+    "RETURN lesson, student, took, gave, tutor, isOf, subject, has, homework, contains, attachment, wasIn, placeOfLesson"
+  )
+  Optional<Lesson> findById(Long id);
+
   @Query(
     "MATCH (student:Person), (city:City)<-[tutorPlace:LIVES_IN]-(tutor:Person)-[offer:OFFERS]->(subject:Subject) " +
     "WHERE ID(student) = $studentId AND ID(offer) = $offerId " +

@@ -1,5 +1,6 @@
 package pl.edu.agh.pawicao.studying_squirrels_api.model.node;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -16,6 +17,7 @@ public class Attachment {
 
   private String filePath;
 
+  @JsonIgnore
   @Relationship(type = "CONTAINS", direction = "INCOMING")
   private Homework homework;
 

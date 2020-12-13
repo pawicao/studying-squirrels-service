@@ -1,7 +1,7 @@
 package pl.edu.agh.pawicao.studying_squirrels_api.model.node;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Data;
+import lombok.*;
 import org.neo4j.ogm.annotation.*;
 
 import java.time.LocalDate;
@@ -10,7 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @NodeEntity
-@Data
+@Getter
+@Setter
+@AllArgsConstructor @NoArgsConstructor
 public class Homework {
 
   @Id

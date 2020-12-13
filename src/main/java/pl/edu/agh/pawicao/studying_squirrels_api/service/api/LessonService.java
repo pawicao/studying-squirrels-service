@@ -6,6 +6,7 @@ import pl.edu.agh.pawicao.studying_squirrels_api.model.api.*;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Attachment;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Homework;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Lesson;
+import pl.edu.agh.pawicao.studying_squirrels_api.repository.AttachmentRepository;
 import pl.edu.agh.pawicao.studying_squirrels_api.repository.HomeworkRepository;
 import pl.edu.agh.pawicao.studying_squirrels_api.repository.LessonRepository;
 
@@ -18,6 +19,8 @@ public class LessonService {
   LessonRepository lessonRepository;
   @Autowired
   HomeworkRepository homeworkRepository;
+  @Autowired
+  AttachmentRepository attachmentRepository;
 
   public Lesson requestLesson(LessonRequest lessonRequest) {
     return lessonRepository.requestLesson(
@@ -113,14 +116,14 @@ public class LessonService {
     return homeworkRepository.editHomeworkSolution(id, solution, dateInMillis);
   }
 
-  public Long deleteAttachment(String id) {
-    homeworkRepository.deleteAttachment(Long.parseLong(id));
-    return Long.parseLong(id);
+  public Long deleteAttachment(Long id) {
+    homeworkRepository.deleteAttachment(id);
+    return id;
   }
 
   public Homework addAtachments(Long id, List<String> attachmentPaths) {
     Homework homework = homeworkRepository.findById(id).get();
-    List<Attachment> attachments = new ArrayList<>();
+    List<Attachment> attachments = homework.getAttachments();
     for(String path : attachmentPaths) {
       Attachment attachment = new Attachment();
       attachment.setFilePath(path);
@@ -142,5 +145,9 @@ public class LessonService {
       }
     }
     return lessonList;
+  }
+
+  public Attachment getAttachment(Long id) {
+    return attachmentRepository.findById(id).get();
   }
 }

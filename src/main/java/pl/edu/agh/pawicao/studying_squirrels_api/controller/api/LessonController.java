@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.api.*;
+import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Attachment;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Homework;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Lesson;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.projection.Lesson.LessonStudentDTO;
@@ -101,7 +102,7 @@ public class LessonController {
     );
   }
 
-  @PostMapping("lesson/rating")
+  @PostMapping("/lesson/rating")
   ResponseEntity<?> setRating (
     @RequestBody RatingRequest ratingRequest
     ) {
@@ -110,7 +111,7 @@ public class LessonController {
     return ResponseEntity.ok(Mapper.map(lessonService.setRating(ratingRequest), LessonStudentDTO.class));
   }
 
-  @GetMapping("lesson/homeworks/{personId}")
+  @GetMapping("/lesson/homeworks/{personId}")
   ResponseEntity<List<Homework>> getHomeworks(
     @PathVariable Long personId,
     @RequestParam boolean student
@@ -118,14 +119,14 @@ public class LessonController {
     return ResponseEntity.ok(lessonService.getHomeworks(personId, student));
   }
 
-  @PostMapping("lesson/homework")
+  @PostMapping("/lesson/homework")
   ResponseEntity<Homework> setHomework(
     @RequestBody HomeworkRequest homeworkRequest
   ) {
     return ResponseEntity.ok(lessonService.setHomework(homeworkRequest));
   }
 
-  @PutMapping("lesson/homework")
+  @PutMapping("/lesson/homework")
   ResponseEntity<Homework> editHomework(
     @RequestBody HomeworkEditRequest homeworkRequest
   ) {
@@ -141,8 +142,8 @@ public class LessonController {
     );
   }
 
-  @PostMapping("/lesson/homework/student")
-  public ResponseEntity<Homework> addHomework(
+  @PostMapping("/lesson/homework/student/one")
+  public ResponseEntity<Homework> addHomeworkWithAttachment(
     @RequestParam(required = false) MultipartFile file,
     @RequestParam Long id,
     @RequestParam(name = "date") Long dateInMillis,
@@ -159,6 +160,16 @@ public class LessonController {
     );
   }
 
+  @PostMapping("/lesson/homework/student")
+  public ResponseEntity<Homework> addHomework(
+    @RequestBody HomeworkSolutionRequest homeworkSolutionRequest
+  ) {
+    return ResponseEntity.ok(
+      lessonService.addHomework(homeworkSolutionRequest.getId(),
+        homeworkSolutionRequest.getDate(), homeworkSolutionRequest.getSolution(), new ArrayList<>())
+    );
+  }
+
   @GetMapping("/attachments/{filename:.+}")
   @ResponseBody
   public ResponseEntity<Resource> downloadAttachment(@PathVariable String filename) {
@@ -169,7 +180,7 @@ public class LessonController {
       .body(resource);
   }
 
-  @PostMapping("lesson/homework/student/attachment")
+  @PostMapping("/lesson/homework/student/attachment")
   public ResponseEntity<Homework> addAttachment(
     @RequestParam MultipartFile file,
     @RequestParam Long id
@@ -177,7 +188,7 @@ public class LessonController {
     MultipartFile newFile = FileUtils.getNewFile("hmwk-" + id + "-" + file.getOriginalFilename(), file);
     String name = storageService.store(newFile);
     List<String> paths = new ArrayList<>();
-    paths.add("/api/attachments/" + name);
+    paths.add("/attachments/" + name);
     return ResponseEntity.ok(
       lessonService.addAtachments(id, paths)
     );
@@ -192,7 +203,7 @@ public class LessonController {
       .map(file -> {
         MultipartFile newFile = FileUtils.getNewFile("hmwk-" + id + "-" + file.getOriginalFilename(), file);
         String name = storageService.store(newFile);
-        return "/api/attachments/" + name;
+        return "/attachments/" + name;
       })
       .collect(Collectors.toList());
     return ResponseEntity.ok(
@@ -211,7 +222,7 @@ public class LessonController {
       .map(file -> {
         MultipartFile newFile = FileUtils.getNewFile("hmwk-" + id + "-" + file.getOriginalFilename(), file);
         String name = storageService.store(newFile);
-        return "/api/attachments/" + name;
+        return "/attachments/" + name;
       })
       .collect(Collectors.toList());
     return ResponseEntity.ok(
@@ -221,20 +232,20 @@ public class LessonController {
 
   @PutMapping("lesson/homework/student")
   public ResponseEntity<Homework> editHomeworkSolution(
-    @RequestParam Long id,
-    @RequestParam String solution,
-    @RequestParam(name = "date") Long dateInMillis
+    @RequestBody HomeworkSolutionRequest homeworkSolutionRequest
   ) {
-    return ResponseEntity.ok(lessonService.editHomeworkSolution(id, solution, dateInMillis));
+    return ResponseEntity.ok(lessonService.editHomeworkSolution(homeworkSolutionRequest.getId(),
+      homeworkSolutionRequest.getSolution(), homeworkSolutionRequest.getDate()));
   }
 
-  @DeleteMapping("/lesson/homework/attachment")
+  @DeleteMapping("/lesson/homework/attachment/{id}")
   ResponseEntity<Long> deleteAttachment(
-    @RequestBody Map<String, String> attachmentName
+    @PathVariable Long id
   ) throws IOException {
-    storageService.delete(attachmentName.get("name"));
+    Attachment attachment = lessonService.getAttachment(id);
+    storageService.delete(attachment.getFilePath());
     return ResponseEntity.ok(
-      lessonService.deleteAttachment(attachmentName.get("id"))
+      lessonService.deleteAttachment(id)
     );
   }
 }
