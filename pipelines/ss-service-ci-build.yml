@@ -13,8 +13,8 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        sed "s/localhost/$DBPASSWORD/" src/main/resources/application.properties
-        sed "s/ThisIsSecretPassword/$DBADDRESS/" src/main/resources/application.properties
+        sed "s/localhost/$DBADDRESS/" src/main/resources/application.properties
+        sed "s/ThisIsSecretPassword/$DBPASSWORD/" src/main/resources/application.properties
     env:
       DBPASSWORD: $(DBPassword)
       DBADDRESS: $(DBAddress)
