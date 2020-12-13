@@ -17,6 +17,7 @@ public class OfferDTO {
   @JsonIgnoreProperties("offeringTutors")
   private Subject subject;
   private Double price;
+  private boolean active;
   private Map<String, List<String>> timeslots = new HashMap<>();
 
   public static OfferDTO convertToDTO(Offer offer) {
@@ -24,6 +25,7 @@ public class OfferDTO {
     dto.setSubject(offer.getSubject());
     dto.setId(offer.getId());
     dto.setPrice(offer.getPrice());
+    dto.setActive(offer.isActive());
     Map<String, List<String>> slots = slotsAsList(offer.getTimeslots());
     dto.setTimeslots(slots);
     return dto;
