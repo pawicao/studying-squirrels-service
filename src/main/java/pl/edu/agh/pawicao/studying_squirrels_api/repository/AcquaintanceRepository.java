@@ -18,8 +18,9 @@ public interface AcquaintanceRepository extends Neo4jRepository<Acquaintance, Lo
   Acquaintance createContactRequest(Long idOne, Long idTwo);
 
   @Query(
-    "MATCH (s:Subject)<-[o:OFFERS]-(someone:Person)-[a:IS_FRIEND]->(me:Person) " +
+    "MATCH (someone:Person)-[a:IS_FRIEND]->(me:Person) " +
     "WHERE ID(someone) = $idTwo AND ID(me) = $idOne " +
+    "OPTIONAL MATCH (s:Subject)<-[o:OFFERS]-(someone) " +
     "SET a.accepted = true " +
     "RETURN a, someone, me, o, s"
   )
