@@ -18,14 +18,16 @@ public interface HomeworkRepository extends Neo4jRepository<Homework, Long> {
   Homework setHomework(Long lessonId, Long deadline, String textContent);
 
   @Query(
-    "MATCH (homework:Homework)-[c:CONTAINS]->(a:Attachment) WHERE ID(homework) = $homeworkId " +
+    "MATCH (homework:Homework)WHERE ID(homework) = $homeworkId " +
+    "OPTIONAL MATCH (homework)-[c:CONTAINS]->(a:Attachment) " +
     "SET homework = {deadline: datetime({timezone: 'Europe/Warsaw', epochSeconds: $deadline/1000}), textContent: $textContent} " +
     "RETURN homework, a, c"
   )
   Homework editHomework(Long homeworkId, Long deadline, String textContent);
 
   @Query(
-    "MATCH (homework:Homework)<-[has:HAS]-(lesson:Lesson)-[c:CONTAINS]->(a:Attachment) WHERE ID(homework) = $id " +
+    "MATCH (homework:Homework)<-[has:HAS]-(lesson:Lesson) WHERE ID(homework) = $id " +
+    "OPTIONAL MATCH (homework)-[c:CONTAINS]->(a:Attachment) " +
     "SET homework.done = true, homework.handedIn = datetime({timezone: 'Europe/Warsaw', epochSeconds: $dateInMillis/1000}), " +
     "homework.solution = $solution " +
     "RETURN homework, has, lesson, a, c"
@@ -33,7 +35,8 @@ public interface HomeworkRepository extends Neo4jRepository<Homework, Long> {
   Homework addHomework(Long id, Long dateInMillis, String solution);
 
   @Query(
-    "MATCH (lesson:Lesson)-[has:HAS]->(homework:Homework)-[c:CONTAINS]->(a:Attachment) WHERE ID(homework) = $id " +
+    "MATCH (lesson:Lesson)-[has:HAS]->(homework:Homework) WHERE ID(homework) = $id " +
+    "OPTIONAL MATCH (homework)-[c:CONTAINS]->(a:Attachment) " +
     "SET homework.handedIn = datetime({timezone: 'Europe/Warsaw', epochSeconds: $dateInMillis/1000}), homework.solution = $solution " +
     "RETURN homework, has, lesson, a, c"
   )
@@ -45,15 +48,17 @@ public interface HomeworkRepository extends Neo4jRepository<Homework, Long> {
   void deleteAttachment(Long id);
 
   @Query(
-    "MATCH (a:Attachment)<-[c:CONTAINS]-(h:Homework)<-[has:HAS]-(l:Lesson)-[isOf:IS_OF]->(s:Subject) " +
+    "MATCH (h:Homework)<-[has:HAS]-(l:Lesson)-[isOf:IS_OF]->(s:Subject) " +
     "MATCH (tutor:Person)-[gave:GAVE]->(l)<-[took:TOOK]-(p:Person) WHERE ID(p) = $personId " +
+    "OPTIONAL MATCH (a:Attachment)<-[c:CONTAINS]-(h) " +
     "RETURN h, has, l, isOf, s, gave, tutor, a, c"
   )
   List<Homework> getReceivedHomeworks(Long personId);
 
   @Query(
-    "MATCH (a:Attachment)<-[c:CONTAINS]-(h:Homework)<-[has:HAS]-(l:Lesson)-[isOf:IS_OF]->(s:Subject) " +
+    "MATCH (h:Homework)<-[has:HAS]-(l:Lesson)-[isOf:IS_OF]->(s:Subject) " +
     "MATCH (student:Person)-[took:TOOK]->(l)<-[gave:GAVE]-(p:Person) WHERE ID(p) = $personId " +
+    "OPTIONAL MATCH (a:Attachment)<-[c:CONTAINS]-(h) " +
     "RETURN h, has, l, isOf, s, student, took, a, c"
   )
   List<Homework> getGivenHomeworks(Long personId);
