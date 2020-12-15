@@ -189,7 +189,11 @@ public class PersonController {
       .toUriString();
     String oldPhotopath = personService.addPhotoPath(id, "/photos/" + name);
     if (oldPhotopath != null) {
-      storageClient.deleteFile(oldPhotopath.substring(8));
+      try {
+        storageClient.deleteFile(oldPhotopath.substring(8));
+      } catch (Exception e) {
+        System.out.println("File wasn't there.");
+      }
     }
     if (storageClient.uploadFile(file, name)) {
       FileResponse response = new FileResponse(name, uri, file.getContentType(), file.getSize());

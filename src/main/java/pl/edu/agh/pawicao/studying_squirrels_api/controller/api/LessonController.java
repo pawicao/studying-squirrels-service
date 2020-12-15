@@ -258,7 +258,12 @@ public class LessonController {
     @PathVariable Long id
   ) throws IOException {
     Attachment attachment = lessonService.getAttachment(id);
-    storageClient.deleteFile(attachment.getFilePath().substring(13));
+    try {
+      storageClient.deleteFile(attachment.getFilePath().substring(13));
+    } catch (Exception e) {
+      System.out.println("File wasn't there.");
+    }
+
     return ResponseEntity.ok(
       lessonService.deleteAttachment(id)
     );
