@@ -1,5 +1,6 @@
 package pl.edu.agh.pawicao.studying_squirrels_api.controller.api;
 
+import com.azure.storage.blob.BlobClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.CacheControl;
@@ -8,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import pl.edu.agh.pawicao.studying_squirrels_api.config.storage.StorageClient;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.api.ContactInfo;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.api.ContactInfoResponse;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.api.FileResponse;
@@ -26,18 +28,20 @@ import pl.edu.agh.pawicao.studying_squirrels_api.util.DateUtils;
 import pl.edu.agh.pawicao.studying_squirrels_api.util.FileUtils;
 import pl.edu.agh.pawicao.studying_squirrels_api.util.Mapper;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 
 @RestController
 @RequestMapping("/api")
 public class PersonController {
+
+  StorageClient storageClient = StorageClient.getInstance();
 
   @Autowired
   private PersonService personService;
@@ -166,31 +170,33 @@ public class PersonController {
   )
   @ResponseBody
   public ResponseEntity<byte[]> getPhoto(@PathVariable String filename) throws IOException {
-    Resource resource = storageService.loadAsResource(filename);
-    InputStream stream = resource.getInputStream();
-    return ResponseEntity.ok(stream.readAllBytes());
+    ByteArrayOutputStream stream = storageClient.getFile(filename);
+    return ResponseEntity.ok(stream.toByteArray());
   }
 
   @PostMapping("/photo")
   public ResponseEntity<FileResponse> uploadPhoto(
     @RequestParam("file") MultipartFile file,
     @RequestParam Long id
-  ) throws IOException {
+  ) {
     String extension = Objects.requireNonNull(file.getOriginalFilename())
       .substring(file.getOriginalFilename().lastIndexOf("."));
     long randomNumber = new Date().getTime();
-    MultipartFile newFile = FileUtils.getNewFile("person-" + id + '-' + randomNumber + extension, file);
-    String name = storageService.store(newFile);
+    String name = "person-" + id + '-' + randomNumber + extension;
     String uri = ServletUriComponentsBuilder.fromCurrentContextPath()
       .path("/photos/")
       .path(name)
       .toUriString();
-    FileResponse response = new FileResponse(name, uri, file.getContentType(), file.getSize());
     String oldPhotopath = personService.addPhotoPath(id, "/photos/" + name);
     if (oldPhotopath != null) {
-      storageService.delete(oldPhotopath.substring(8));
+      storageClient.deleteFile(oldPhotopath.substring(8));
     }
-    return ResponseEntity.ok(response);
+    if (storageClient.uploadFile(file, name)) {
+      FileResponse response = new FileResponse(name, uri, file.getContentType(), file.getSize());
+      return ResponseEntity.ok(response);
+    } else {
+      return ResponseEntity.status(500).body(null);
+    }
   }
 
 }

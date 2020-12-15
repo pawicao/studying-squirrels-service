@@ -4,9 +4,11 @@ import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import pl.edu.agh.pawicao.studying_squirrels_api.config.storage.StorageClient;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.api.*;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Attachment;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Homework;
@@ -18,6 +20,7 @@ import pl.edu.agh.pawicao.studying_squirrels_api.service.api.StorageService;
 import pl.edu.agh.pawicao.studying_squirrels_api.util.FileUtils;
 import pl.edu.agh.pawicao.studying_squirrels_api.util.Mapper;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -25,6 +28,9 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api")
 public class LessonController {
+
+  StorageClient storageClient = StorageClient.getInstance();
+
   @Autowired
   LessonService lessonService;
 
@@ -151,9 +157,10 @@ public class LessonController {
   ) {
     List<String> paths = new ArrayList<>();
     if (file != null) {
-      MultipartFile newFile = FileUtils.getNewFile("hmwk-" + id + "-" + file.getOriginalFilename(), file);
-      String name = storageService.store(newFile);
-      paths.add("/api/attachments/" + name);
+      String name = "hmwk-" + id + "-" + file.getOriginalFilename();
+      if (storageClient.uploadFile(file, name)) {
+        paths.add("/attachments/" + name);
+      }
     }
     return ResponseEntity.ok(
       lessonService.addHomework(id, dateInMillis, solution, paths)
@@ -170,14 +177,15 @@ public class LessonController {
     );
   }
 
-  @GetMapping("/attachments/{filename:.+}")
+  @RequestMapping(
+    value = "/attachments/{filename:.+}",
+    method = RequestMethod.GET,
+    produces = MediaType.IMAGE_JPEG_VALUE
+  )
   @ResponseBody
-  public ResponseEntity<Resource> downloadAttachment(@PathVariable String filename) {
-    Resource resource = storageService.loadAsResource(filename);
-    return ResponseEntity.ok()
-      .header(HttpHeaders.CONTENT_DISPOSITION,
-        "attachment; filename=\"" + resource.getFilename() + "\"")
-      .body(resource);
+  public ResponseEntity<byte[]> downloadAttachment(@PathVariable String filename) {
+    ByteArrayOutputStream stream = storageClient.getFile(filename);
+    return ResponseEntity.ok(stream.toByteArray());
   }
 
   @PostMapping("/lesson/homework/student/attachment")
@@ -185,13 +193,14 @@ public class LessonController {
     @RequestParam MultipartFile file,
     @RequestParam Long id
   ) {
-    MultipartFile newFile = FileUtils.getNewFile("hmwk-" + id + "-" + file.getOriginalFilename(), file);
-    String name = storageService.store(newFile);
-    List<String> paths = new ArrayList<>();
-    paths.add("/attachments/" + name);
-    return ResponseEntity.ok(
-      lessonService.addAtachments(id, paths)
-    );
+    String name = "hmwk-" + id + "-" + file.getOriginalFilename();
+    if (storageClient.uploadFile(file, name)) {
+      List<String> paths = new ArrayList<>();
+      paths.add("/attachments/" + name);
+      return ResponseEntity.ok(lessonService.addAtachments(id, paths));
+    } else {
+      return ResponseEntity.status(500).body(null);
+    }
   }
 
   @PostMapping("lesson/homework/student/attachment/multiple")
@@ -201,9 +210,12 @@ public class LessonController {
   ) {
     List<String> paths = Arrays.stream(files)
       .map(file -> {
-        MultipartFile newFile = FileUtils.getNewFile("hmwk-" + id + "-" + file.getOriginalFilename(), file);
-        String name = storageService.store(newFile);
-        return "/attachments/" + name;
+        String name = "hmwk-" + id + "-" + file.getOriginalFilename();
+        if (storageClient.uploadFile(file, name)) {
+          return "/attachments/" + name;
+        } else {
+          return "";
+        }
       })
       .collect(Collectors.toList());
     return ResponseEntity.ok(
@@ -220,9 +232,12 @@ public class LessonController {
   ) {
     List<String> paths = Arrays.stream(files)
       .map(file -> {
-        MultipartFile newFile = FileUtils.getNewFile("hmwk-" + id + "-" + file.getOriginalFilename(), file);
-        String name = storageService.store(newFile);
-        return "/attachments/" + name;
+        String name = "hmwk-" + id + "-" + file.getOriginalFilename();
+        if (storageClient.uploadFile(file, name)) {
+          return "/attachments/" + name;
+        } else {
+          return "";
+        }
       })
       .collect(Collectors.toList());
     return ResponseEntity.ok(
@@ -243,7 +258,7 @@ public class LessonController {
     @PathVariable Long id
   ) throws IOException {
     Attachment attachment = lessonService.getAttachment(id);
-    storageService.delete(attachment.getFilePath());
+    storageClient.deleteFile(attachment.getFilePath().substring(13));
     return ResponseEntity.ok(
       lessonService.deleteAttachment(id)
     );
