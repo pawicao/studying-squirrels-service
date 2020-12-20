@@ -118,7 +118,7 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
   @Query(
     "MATCH (n:Person)-[took:TOOK]->(lesson:Lesson)-[isOf:IS_OF]->(subject:Subject) " +
     "MATCH (issuer:Person)-[:GAVE]->(lesson) " +
-    "WHERE ID(n) = $personId and EXISTS(took.tutorRating) " +
+    "WHERE ID(n) = $personId and EXISTS(took.studentRating) " +
     "AND ($subjectId is null OR ID(subject) = $subjectId) " +
     "RETURN took.tutorRating as rating, took.tutorRatingDescription AS ratingDescription, " +
     "lesson.date AS date, subject.name AS subject, subject.icon AS subjectIcon, issuer.firstName AS issuerName"
@@ -128,7 +128,7 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
   @Query(
     "MATCH (n:Person)-[gave:GAVE]->(lesson:Lesson)-[isOf:IS_OF]->(subject:Subject) " +
     "MATCH (issuer:Person)-[:TOOK]->(lesson) " +
-    "WHERE ID(n) = $personId and EXISTS(gave.studentRating) " +
+    "WHERE ID(n) = $personId and EXISTS(gave.tutorRating) " +
     "AND ($subjectId is null OR ID(subject) = $subjectId) " +
     "RETURN gave.tutorRating as rating, gave.tutorRatingDescription AS ratingDescription, " +
     "lesson.date AS date, subject.name AS subject, subject.icon AS subjectIcon, issuer.firstName AS issuerName"
