@@ -3,6 +3,7 @@ package pl.edu.agh.pawicao.studying_squirrels_api.service.api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.api.ContactInfo;
+import pl.edu.agh.pawicao.studying_squirrels_api.model.api.RolesResponse;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Person;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.projection.Person.BasicPersonDTO;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.projection.RatingDTO;
@@ -130,5 +131,9 @@ public class PersonService {
 
   public boolean changeStatus(Long personId, boolean student) {
     return student ? personRepository.makeStudent(personId) : personRepository.makeTutor(personId);
+  }
+
+  public Person getRoles(Long personId) {
+    return personRepository.getRoles(personId);
   }
 }

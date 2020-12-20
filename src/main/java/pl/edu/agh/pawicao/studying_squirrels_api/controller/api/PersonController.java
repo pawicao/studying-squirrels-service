@@ -10,10 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import pl.edu.agh.pawicao.studying_squirrels_api.config.storage.StorageClient;
-import pl.edu.agh.pawicao.studying_squirrels_api.model.api.ContactInfo;
-import pl.edu.agh.pawicao.studying_squirrels_api.model.api.ContactInfoResponse;
-import pl.edu.agh.pawicao.studying_squirrels_api.model.api.FileResponse;
-import pl.edu.agh.pawicao.studying_squirrels_api.model.api.TutorWithTimeslotResponse;
+import pl.edu.agh.pawicao.studying_squirrels_api.model.api.*;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Person;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.projection.Person.BasicTutorDTO;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.projection.Person.DetailedPersonAcquaintanceDTO;
@@ -30,7 +27,6 @@ import pl.edu.agh.pawicao.studying_squirrels_api.util.Mapper;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -49,8 +45,12 @@ public class PersonController {
   @Autowired
   private OfferService offerService;
 
-  @Autowired
-  private StorageService storageService;
+  @GetMapping("/person/status/{personId}")
+  ResponseEntity<RolesResponse> getRoles(
+    @PathVariable Long personId
+  ) {
+    return ResponseEntity.ok(Mapper.map(personService.getRoles(personId), RolesResponse.class));
+  }
 
   @PutMapping("/person/status/{personId}")
   ResponseEntity<Boolean> changeStatus(

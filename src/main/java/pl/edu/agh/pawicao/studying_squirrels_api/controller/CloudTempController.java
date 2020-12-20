@@ -24,6 +24,11 @@ public class CloudTempController {
     return "Studying Squirrels Service";
   }
 
+  @GetMapping("/api/validate")
+  boolean validate() {
+    return true;
+  }
+
   @GetMapping("/admin/loadInitialSubjects")
   List<Subject> loadInitialSubjects() throws JsonProcessingException {
     ObjectMapper objectMapper = new ObjectMapper();

@@ -2,6 +2,7 @@ package pl.edu.agh.pawicao.studying_squirrels_api.repository;
 
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
+import pl.edu.agh.pawicao.studying_squirrels_api.model.api.RolesResponse;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.Person;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.projection.Person.PersonCredentialsProjection;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.projection.RatingDTO;
@@ -16,6 +17,11 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
   PersonCredentialsProjection findPersonByEmail(String email);
 
   List<Person> findAllByTutorIsTrue();
+
+  @Query(
+    "MATCH (n:Person) WHERE ID(n) = $id RETURN n"
+  )
+  Person getRoles(Long id);
 
   @Query("MATCH (n:Person) WHERE ID(n) = $id SET n.student = true RETURN true")
   boolean makeStudent(Long id);
@@ -122,7 +128,7 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
   @Query(
     "MATCH (n:Person)-[gave:GAVE]->(lesson:Lesson)-[isOf:IS_OF]->(subject:Subject) " +
     "MATCH (issuer:Person)-[:TOOK]->(lesson) " +
-    "WHERE ID(n) = $personId and EXISTS(gave.tutorRating) " +
+    "WHERE ID(n) = $personId and EXISTS(gave.studentRating) " +
     "AND ($subjectId is null OR ID(subject) = $subjectId) " +
     "RETURN gave.tutorRating as rating, gave.tutorRatingDescription AS ratingDescription, " +
     "lesson.date AS date, subject.name AS subject, subject.icon AS subjectIcon, issuer.firstName AS issuerName"
