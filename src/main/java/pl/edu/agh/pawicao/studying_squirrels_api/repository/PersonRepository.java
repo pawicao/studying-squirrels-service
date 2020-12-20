@@ -120,7 +120,7 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
     "MATCH (issuer:Person)-[:GAVE]->(lesson) " +
     "WHERE ID(n) = $personId and EXISTS(took.studentRating) " +
     "AND ($subjectId is null OR ID(subject) = $subjectId) " +
-    "RETURN took.tutorRating as rating, took.tutorRatingDescription AS ratingDescription, " +
+    "RETURN took.studentRating as rating, took.studentRatingDescription AS ratingDescription, " +
     "lesson.date AS date, subject.name AS subject, subject.icon AS subjectIcon, issuer.firstName AS issuerName"
   )
   List<RatingDTO> getStudentRatings(Long personId, Long subjectId);
