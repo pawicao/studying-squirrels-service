@@ -31,9 +31,10 @@ public class LessonService {
     );
   }
 
-  public Lesson confirmLesson(Long lessonId) {
-    Lesson lesson = lessonRepository.findById(lessonId).get();
+  public Lesson confirmLesson(LessonTutorDescriptionRequest lessonTutorDescriptionRequest) {
+    Lesson lesson = lessonRepository.findById(lessonTutorDescriptionRequest.getLessonId()).get();
     lesson.setConfirmed(true);
+    lesson.setTutorDescription(lessonTutorDescriptionRequest.getTutorDescription());
     return lessonRepository.save(lesson);
   }
 

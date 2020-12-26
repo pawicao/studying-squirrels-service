@@ -50,11 +50,11 @@ public class LessonController {
     return ResponseEntity.ok(lesson);
   }
 
-  @PutMapping("/lesson/{lessonId}/confirm")
+  @PutMapping("/lesson/confirm")
   ResponseEntity<Lesson> confirmLesson(
-    @PathVariable Long lessonId
+    @RequestBody LessonTutorDescriptionRequest lessonTutorDescriptionRequest
   ) {
-    return ResponseEntity.ok(lessonService.confirmLesson(lessonId));
+    return ResponseEntity.ok(lessonService.confirmLesson(lessonTutorDescriptionRequest));
   }
 
   @PutMapping("/lesson/{lessonId}/cancel")
