@@ -106,8 +106,6 @@ public class SemwebController {
                     responseProps.getRelatednessRate(),
                     SemwebPropertiesEntity.mapToPropertyEntities(semwebEntities),
                     responseProps.getSpotlightEntities())));
-      } else {
-        System.out.println("UPDATE THE CACHE"); // TODO: only here update the cache
       }
     }
 

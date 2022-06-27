@@ -55,4 +55,8 @@ public class SemwebService {
     public List<SemwebEntity> queryDBpedia(List<String> spotlightEntities, double relatednessRate) {
         return null;
     }
+
+    private void updateCache(List<SemwebEntity> semwebEntities) {
+
+    }
 }
