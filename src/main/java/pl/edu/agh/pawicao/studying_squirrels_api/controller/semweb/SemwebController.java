@@ -66,15 +66,17 @@ public class SemwebController {
         // get entities from cache
         if (!requestProperties.getIsCacheSeeked()) {
             System.out.println("semwebService.queryCache()");
-            semwebEntities = semwebService.queryCache(spotlightEntities, requestProperties.getRelatednessRate());
+            semwebEntities = semwebService.queryCache(spotlightEntities, requestProperties.getRelatednessRate()); // TODO: filter out
+            // TODO: get relatednessScore for each and sort them accordingly
         }
 
         // get entities from dbpedia query
         if (semwebEntities.isEmpty()) {
             System.out.println("semwebService.queryDBpedia()");
-            semwebEntities = semwebService.queryDBpedia(spotlightEntities, requestProperties.getRelatednessRate());
+            semwebEntities = semwebService.queryDBpedia(spotlightEntities, requestProperties.getRelatednessRate()); //TODO: filter out
+            // TODO: only here update the cache
         }
-
+        // todo: format response
 
         return ResponseEntity.ok(new SemwebResponse());
     }
