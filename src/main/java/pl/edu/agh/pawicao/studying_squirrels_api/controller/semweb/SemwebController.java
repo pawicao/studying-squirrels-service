@@ -54,12 +54,7 @@ public class SemwebController {
     }
 
     // query DBpediaSpotlight
-    if (requestProps.getSpotlightEntities().isEmpty()
-        || (requestProps.getRelatednessRate() < SemwebRates.MIN_RATE
-            && !requestProps.getIsCacheSeeked())) {
-      if (requestProps.getRelatednessRate() < SemwebRates.MIN_RATE) {
-        responseProps.setRelatednessRate(SemwebRates.INITIAL_RATE - SemwebRates.DIFF_RATE);
-      }
+    if (requestProps.getSpotlightEntities().isEmpty()) {
       do {
         spotlightEntities =
             semwebService.queryDBpediaSpotlight(
@@ -74,11 +69,7 @@ public class SemwebController {
       } while (spotlightEntities.isEmpty());
       responseProps.setSpotlightEntities(spotlightEntities);
       if (spotlightEntities.isEmpty()) {
-        return ResponseEntity.ok(
-            new SemwebResponse(
-                semwebEntities,
-                responseProps)); // TODO: Return empty response formatted to show that no new
-        // TODO: things are there
+        return ResponseEntity.ok(new SemwebResponse(semwebEntities, responseProps));
       }
     }
 
@@ -89,6 +80,7 @@ public class SemwebController {
           filterEntities(
               semwebService.queryCache(spotlightEntities, requestProps.getRelatednessRate()),
               requestProps.getExtractedEntities());
+      responseProps.setIsCacheSeeked(true);
       // TODO: get relatednessScore for each and sort them accordingly
     }
 
@@ -99,10 +91,25 @@ public class SemwebController {
           filterEntities(
               semwebService.queryDBpedia(spotlightEntities, requestProps.getRelatednessRate()),
               requestProps.getExtractedEntities());
-
-      // TODO: only here update the cache
+      responseProps.setIsCacheSeeked(false);
+      responseProps.setRelatednessRate(requestProps.getRelatednessRate() - SemwebRates.DIFF_RATE);
+      if (semwebEntities.isEmpty()) {
+        if (responseProps.getRelatednessRate() < SemwebRates.MIN_RATE) {
+          responseProps.setSpotlightEntities(new ArrayList<>());
+        }
+        return extractEntities(
+            new SemwebRequest(
+                requestBody.getText(),
+                new SemwebRequestProperties(
+                    responseProps.getIsCacheSeeked(),
+                    responseProps.getConfidenceRate(),
+                    responseProps.getRelatednessRate(),
+                    SemwebPropertiesEntity.mapToPropertyEntities(semwebEntities),
+                    responseProps.getSpotlightEntities())));
+      } else {
+        System.out.println("UPDATE THE CACHE"); // TODO: only here update the cache
+      }
     }
-    // todo: format response
 
     return ResponseEntity.ok(new SemwebResponse(semwebEntities, responseProps));
   }
