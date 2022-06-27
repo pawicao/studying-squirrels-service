@@ -7,9 +7,9 @@ import java.util.List;
 
 @Data
 public class SemwebResponseProperties {
-    Boolean isCacheSeeked;
-    Boolean isDbpediaSeeked;
-    Double confidenceRate;
-    Double relatednessRate;
-    private List<SemwebPropertiesEntity> spotlightEntities = new ArrayList<>();
+  Boolean isCacheSeeked;
+  Boolean isDbpediaSeeked;
+  Double confidenceRate;
+  Double relatednessRate;
+  private List<String> spotlightEntities = new ArrayList<>();
 }
