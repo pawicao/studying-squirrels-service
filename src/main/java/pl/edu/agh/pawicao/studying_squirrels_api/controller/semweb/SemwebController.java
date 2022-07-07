@@ -2,7 +2,10 @@ package pl.edu.agh.pawicao.studying_squirrels_api.controller.semweb;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.api.SemwebRequest;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.api.SemwebResponse;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.api.semweb.SemwebPropertiesEntity;
@@ -35,6 +38,7 @@ public class SemwebController {
 
   @PostMapping("/extract")
   ResponseEntity<SemwebResponse> extractEntities(@RequestBody SemwebRequest requestBody) {
+    semwebService.queryDBpedia(new ArrayList<>(), 0.0);
     // initialing response arrays
     List<String> spotlightEntities = new ArrayList<>();
     List<SemwebEntity> semwebEntities = new ArrayList<>();
