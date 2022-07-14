@@ -8,21 +8,45 @@ import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.SemwebEntity
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @NodeEntity
 @Data
 public class SemwebEntity {
 
-    @Id
-    private String uri;
+  public SemwebEntity(String uri, String name, String link) {
+    this.uri = uri;
+    this.name = name;
+    this.wikipediaUrl = link;
+  }
 
-    private String name;
-    private String wikipediaUrl;
+  @Id private String uri;
 
-    @Relationship(type = "IS_RELATED")
-    private List<SemwebEntityConnection> relatedEntities = new ArrayList<>();
+  private String name;
+  private String wikipediaUrl;
 
-    @Relationship(type = "IS_RELATED", direction = "INCOMING")
-    private List<SemwebEntityConnection> relatedEntitiesIncoming = new ArrayList<>();
+  @Relationship(type = "IS_RELATED")
+  private List<SemwebEntityConnection> relatedEntities = new ArrayList<>();
 
+  @Relationship(type = "IS_RELATED", direction = "INCOMING")
+  private List<SemwebEntityConnection> relatedEntitiesIncoming = new ArrayList<>();
+
+  public boolean equals(Object obj) {
+    if (obj instanceof SemwebEntity) {
+      SemwebEntity se = (SemwebEntity) obj;
+      return (Objects.equals(this.uri, se.uri));
+    }
+    return false;
+  }
+
+  public int hashCode() {
+    char[] chars = new char[this.uri.length()];
+    this.uri.getChars(0, this.uri.length(), chars, 0);
+
+    int returnValueInt = 0;
+    for (char aChar : chars) {
+      returnValueInt = returnValueInt + aChar;
+    }
+    return (300 * returnValueInt);
+  }
 }

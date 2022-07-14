@@ -14,9 +14,11 @@ import pl.edu.agh.pawicao.studying_squirrels_api.model.api.semweb.SemwebResponse
 import pl.edu.agh.pawicao.studying_squirrels_api.model.node.SemwebEntity;
 import pl.edu.agh.pawicao.studying_squirrels_api.service.api.SemwebService;
 import pl.edu.agh.pawicao.studying_squirrels_api.util.SemwebRates;
+import pl.edu.agh.pawicao.studying_squirrels_api.util.VarUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -27,18 +29,26 @@ public class SemwebController {
 
   private List<SemwebEntity> filterEntities(
       List<SemwebEntity> responseEntities, List<SemwebPropertiesEntity> propsEntities) {
+    Set<String> propsEntitiesURIs =
+        propsEntities.stream().map(SemwebPropertiesEntity::getUri).collect(Collectors.toSet());
+
     return responseEntities.stream()
-        .filter(
-            e ->
-                propsEntities.stream()
-                    .map(SemwebPropertiesEntity::getUri)
-                    .anyMatch(uri -> uri.equals(e.getUri())))
+        .filter(e -> !propsEntitiesURIs.contains(e.getUri()))
+        .collect(Collectors.toList());
+  }
+
+  private List<SemwebEntity> filterEntities(
+      Set<SemwebEntity> responseEntities, List<SemwebPropertiesEntity> propsEntities) {
+    Set<String> propsEntitiesURIs =
+        propsEntities.stream().map(SemwebPropertiesEntity::getUri).collect(Collectors.toSet());
+
+    return responseEntities.stream()
+        .filter(e -> !propsEntitiesURIs.contains(e.getUri()))
         .collect(Collectors.toList());
   }
 
   @PostMapping("/extract")
   ResponseEntity<SemwebResponse> extractEntities(@RequestBody SemwebRequest requestBody) {
-    semwebService.queryDBpedia(new ArrayList<>(), 0.0);
     // initialing response arrays
     List<String> spotlightEntities = new ArrayList<>();
     List<SemwebEntity> semwebEntities = new ArrayList<>();
@@ -50,11 +60,13 @@ public class SemwebController {
     // setting confidence and relatedness rates for initial requests
     if (requestProps.getConfidenceRate() == null) {
       requestProps.setConfidenceRate(SemwebRates.INITIAL_RATE);
-      responseProps.setConfidenceRate(SemwebRates.INITIAL_RATE - SemwebRates.DIFF_RATE);
+      responseProps.setConfidenceRate(
+          VarUtils.round(SemwebRates.INITIAL_RATE - SemwebRates.DIFF_RATE));
     }
     if (requestProps.getRelatednessRate() == null) {
       requestProps.setRelatednessRate(SemwebRates.INITIAL_RATE);
-      responseProps.setRelatednessRate(SemwebRates.INITIAL_RATE - SemwebRates.DIFF_RATE);
+      responseProps.setRelatednessRate(
+          VarUtils.round(SemwebRates.INITIAL_RATE - SemwebRates.DIFF_RATE));
     }
 
     // query DBpediaSpotlight
@@ -64,9 +76,11 @@ public class SemwebController {
             semwebService.queryDBpediaSpotlight(
                 requestBody.getText(), requestProps.getConfidenceRate());
         if (spotlightEntities.isEmpty()) {
-          requestProps.setConfidenceRate(requestProps.getConfidenceRate() - SemwebRates.DIFF_RATE);
-          responseProps.setConfidenceRate(requestProps.getConfidenceRate() - SemwebRates.DIFF_RATE);
-          if (requestProps.getConfidenceRate() < SemwebRates.MIN_RATE) {
+          requestProps.setConfidenceRate(
+              VarUtils.round(requestProps.getConfidenceRate() - SemwebRates.DIFF_RATE));
+          responseProps.setConfidenceRate(
+              VarUtils.round(requestProps.getConfidenceRate() - SemwebRates.DIFF_RATE));
+          if (requestProps.getConfidenceRate() < SemwebRates.MIN_SPOTLIGHT_RATE) {
             break;
           }
         }
@@ -75,10 +89,12 @@ public class SemwebController {
       if (spotlightEntities.isEmpty()) {
         return ResponseEntity.ok(new SemwebResponse(semwebEntities, responseProps));
       }
+    } else {
+      spotlightEntities = requestProps.getSpotlightEntities();
     }
 
     // get entities from cache
-    if (!requestProps.getIsCacheSeeked()) {
+    /*    if (!requestProps.getIsCacheSeeked()) {
       System.out.println("semwebService.queryCache()");
       semwebEntities =
           filterEntities(
@@ -86,19 +102,20 @@ public class SemwebController {
               requestProps.getExtractedEntities());
       responseProps.setIsCacheSeeked(true);
       // TODO: get relatednessScore for each and sort them accordingly
-    }
+    }*/
+    // TODO: Uncomment this!
 
     // get entities from dbpedia query
     if (semwebEntities.isEmpty()) {
-      System.out.println("semwebService.queryDBpedia()");
       semwebEntities =
           filterEntities(
               semwebService.queryDBpedia(spotlightEntities, requestProps.getRelatednessRate()),
               requestProps.getExtractedEntities());
       responseProps.setIsCacheSeeked(false);
-      responseProps.setRelatednessRate(requestProps.getRelatednessRate() - SemwebRates.DIFF_RATE);
+      responseProps.setRelatednessRate(
+          VarUtils.round(requestProps.getRelatednessRate() - SemwebRates.DIFF_RATE));
       if (semwebEntities.isEmpty()) {
-        if (responseProps.getRelatednessRate() < SemwebRates.MIN_RATE) {
+        if (responseProps.getRelatednessRate() < SemwebRates.MIN_DBPEDIA_RATE) {
           responseProps.setSpotlightEntities(new ArrayList<>());
         }
         return extractEntities(
@@ -110,6 +127,9 @@ public class SemwebController {
                     responseProps.getRelatednessRate(),
                     SemwebPropertiesEntity.mapToPropertyEntities(semwebEntities),
                     responseProps.getSpotlightEntities())));
+      } else {
+        // TODO: updateCache
+        System.out.println("Cache will be updated here!");
       }
     }
 

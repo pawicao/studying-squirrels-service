@@ -11,9 +11,9 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SemwebRequestProperties {
-  Boolean isCacheSeeked;
-  Double confidenceRate;
-  Double relatednessRate;
+  Boolean isCacheSeeked = false; // TODO: Check if that works for sure
+  Double confidenceRate = null;
+  Double relatednessRate = null;
   private List<SemwebPropertiesEntity> extractedEntities = new ArrayList<>();
   private List<String> spotlightEntities = new ArrayList<>();
 }
