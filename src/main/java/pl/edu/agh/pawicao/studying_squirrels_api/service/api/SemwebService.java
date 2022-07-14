@@ -5,7 +5,7 @@ import org.apache.jena.query.*;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import pl.edu.agh.pawicao.studying_squirrels_api.model.node.SemwebEntity;
+import pl.edu.agh.pawicao.studying_squirrels_api.model.api.semweb.SemwebResponseEntity;
 import pl.edu.agh.pawicao.studying_squirrels_api.util.SemwebPair;
 import pl.edu.agh.pawicao.studying_squirrels_api.util.VarUtils;
 
@@ -51,11 +51,10 @@ public class SemwebService {
     return resourceUris;
   }
 
-  public List<SemwebEntity> queryCache(List<String> spotlightEntities, double relatednessRate) {
-    return null;
-  }
-
-  public Set<SemwebEntity> queryDBpedia(List<String> spotlightEntities, double relatednessRate) {
+  public List<SemwebResponseEntity> queryDBpedia(
+      List<String> spotlightEntities, double relatednessRate) {
+    System.out.println(
+        "Sanity check: queryDBpedia() run with the relatednessRate of " + relatednessRate);
     Map<String, List<SemwebPair>> entityLinks = new HashMap<>();
     for (int i = 0; i < spotlightEntities.size(); i++) {
       for (int j = i + 1; j < spotlightEntities.size(); j++) {
@@ -63,6 +62,7 @@ public class SemwebService {
         String queryString =
             "PREFIX foaf: <http://xmlns.com/foaf/0.1/> "
                 + getQuery(relatednessRate, spotlightEntities.get(i), spotlightEntities.get(j));
+        System.out.println("Executing DBpedia query:");
         System.out.println(queryString);
         Query query = QueryFactory.create(queryString);
         QueryExecution qexec =
@@ -71,15 +71,19 @@ public class SemwebService {
           ResultSet results = qexec.execSelect();
           while (results.hasNext()) {
             QuerySolution soln = results.nextSolution();
-            // highest relatednessrate
             if (relatednessRate == 0.8) {
               handleDbpediaFirstLevel(
                   entityLinks, soln, spotlightEntities.get(i), spotlightEntities.get(j));
-            } else {
+            } else if (relatednessRate == 0.6) {
               handleDbpediaSecondLevel(
+                  entityLinks, soln, spotlightEntities.get(i), spotlightEntities.get(j));
+            } else {
+              handleDbpediaThirdLevel(
                   entityLinks, soln, spotlightEntities.get(i), spotlightEntities.get(j));
             }
           }
+        } catch (QueryException ex) {
+          return mapSemwebPairsToEntities(entityLinks);
         } finally {
           qexec.close();
         }
@@ -124,7 +128,8 @@ public class SemwebService {
                 + "'{' <{1}> ?x ?middleUri2 . '}' "
                 + "UNION "
                 + "'{' ?middleUri2 ?v <{1}> . '}' "
-                + "<{1}> foaf:name ?secondNameUnsampled ; foaf:isPrimaryTopicOf ?secondLink . '}'",
+                + "<{1}> foaf:name ?secondNameUnsampled ; foaf:isPrimaryTopicOf ?secondLink . '}' "
+                + "GROUP BY ?firstLink ?secondLink ?middleLink1 ?middleUri1 ?middleLink2 ?middleUri2",
             firstUri, secondUri);
       default:
         return "";
@@ -152,8 +157,6 @@ public class SemwebService {
     }
     return null;
   }
-
-  private void updateCache(List<SemwebEntity> semwebEntities) {}
 
   private void handleDbpediaFirstLevel(
       Map<String, List<SemwebPair>> entityLinks,
@@ -221,6 +224,72 @@ public class SemwebService {
         middleLink);
   }
 
+  private void handleDbpediaThirdLevel(
+      Map<String, List<SemwebPair>> entityLinks,
+      QuerySolution soln,
+      String firstSpotlightEntity,
+      String secondSpotlightEntity) {
+    String firstName =
+        VarUtils.removeSuffixIfExists(soln.getLiteral("firstName").toString(), "@en");
+    String firstLink = soln.getResource("firstLink").getURI();
+    String middleName1 =
+        VarUtils.removeSuffixIfExists(soln.getLiteral("middleName1").toString(), "@en");
+    String middleUri1 = soln.getResource("middleUri1").getURI();
+    String middleLink1 = soln.getResource("middleLink1").getURI();
+    String secondName =
+        VarUtils.removeSuffixIfExists(soln.getLiteral("secondName").toString(), "@en");
+    String secondLink = soln.getResource("secondLink").getURI();
+    String middleName2 =
+        VarUtils.removeSuffixIfExists(soln.getLiteral("middleName2").toString(), "@en");
+    String middleUri2 = soln.getResource("middleUri2").getURI();
+    String middleLink2 = soln.getResource("middleLink2").getURI();
+    modifyEntityPair(
+        entityLinks,
+        3,
+        firstSpotlightEntity,
+        firstName,
+        firstLink,
+        secondSpotlightEntity,
+        secondName,
+        secondLink);
+    modifyEntityPair(
+        entityLinks,
+        1,
+        firstSpotlightEntity,
+        firstName,
+        firstLink,
+        middleUri1,
+        middleName1,
+        middleLink1);
+    modifyEntityPair(
+        entityLinks,
+        2,
+        firstSpotlightEntity,
+        firstName,
+        firstLink,
+        middleUri2,
+        middleName2,
+        middleLink2);
+    modifyEntityPair(
+        entityLinks,
+        2,
+        secondSpotlightEntity,
+        secondName,
+        secondLink,
+        middleUri1,
+        middleName1,
+        middleLink1);
+    modifyEntityPair(
+        entityLinks,
+        1,
+        secondSpotlightEntity,
+        secondName,
+        secondLink,
+        middleUri2,
+        middleName2,
+        middleLink2);
+  }
+
   private void modifyEntityPair(
       Map<String, List<SemwebPair>> entityLinks,
       int shortestDistance,
@@ -232,20 +301,15 @@ public class SemwebService {
       String secondLink) {
     SemwebPair pairOfEntities = findExistingSemwebPair(entityLinks, firstUri, secondUri);
     if (pairOfEntities == null) {
-      System.out.println("No pair found");
-      SemwebEntity firstEntity = new SemwebEntity(firstUri, firstName, firstLink);
-      SemwebEntity secondEntity = new SemwebEntity(secondUri, secondName, secondLink);
-      System.out.println(firstEntity);
-      System.out.println(secondEntity);
+      SemwebResponseEntity firstEntity = new SemwebResponseEntity(firstUri, firstName, firstLink);
+      SemwebResponseEntity secondEntity =
+          new SemwebResponseEntity(secondUri, secondName, secondLink);
       SemwebPair semwebPair = new SemwebPair(firstEntity, secondEntity, shortestDistance, 1);
       List<SemwebPair> semwebPairList = entityLinks.get(firstUri);
       if (semwebPairList == null) {
-        System.out.println("No pairlist");
         semwebPairList = new ArrayList<>();
         semwebPairList.add(semwebPair);
         entityLinks.put(firstUri, semwebPairList);
-        System.out.println("Entity links now");
-        System.out.println(entityLinks);
       } else {
         semwebPairList.add(semwebPair);
       }
@@ -257,23 +321,36 @@ public class SemwebService {
     }
   }
 
-  private Set<SemwebEntity> mapSemwebPairsToEntities(Map<String, List<SemwebPair>> entityLinks) {
-    System.out.println(entityLinks);
-    Set<SemwebEntity> result = new HashSet<>();
-    System.out.println("MAKARENA");
-    System.out.println(entityLinks);
+  private List<SemwebResponseEntity> mapSemwebPairsToEntities(
+      Map<String, List<SemwebPair>> entityLinks) {
+    Map<String, SemwebResponseEntity> result = new HashMap<>();
     for (List<SemwebPair> semwebPairList : entityLinks.values()) {
       for (SemwebPair semwebPair : semwebPairList) {
-        SemwebEntity firstEntity = semwebPair.getFirst();
-        SemwebEntity secondEntity = semwebPair.getSecond();
-        System.out.println(firstEntity.getUri());
-        System.out.println(secondEntity.getUri());
-        // first.setOccurrences(first.getOccurrences() + 1);
-        // second.setOccurrences(second.getOccurrences() + 1);
-        result.add(firstEntity);
-        result.add(secondEntity);
+        SemwebResponseEntity firstPairEntity = semwebPair.getFirst();
+        SemwebResponseEntity secondPairEntity = semwebPair.getSecond();
+        SemwebResponseEntity firstEntity = result.get(firstPairEntity.getUri());
+        SemwebResponseEntity secondEntity = result.get(secondPairEntity.getUri());
+        if (firstEntity != null) {
+          firstEntity.setOccurrences(firstEntity.getOccurrences() + 1);
+        } else {
+          result.put(firstPairEntity.getUri(), firstPairEntity);
+        }
+        if (secondEntity != null) {
+          secondEntity.setOccurrences(secondEntity.getOccurrences() + 1);
+        } else {
+          result.put(secondPairEntity.getUri(), secondPairEntity);
+        }
       }
     }
-    return result;
+    List<SemwebResponseEntity> resultList = new ArrayList<>(result.values());
+    resultList.sort(Comparator.comparingInt(SemwebResponseEntity::getOccurrences).reversed());
+    return resultList;
   }
+
+  public List<SemwebResponseEntity> queryCache(
+      List<String> spotlightEntities, double relatednessRate) {
+    return null;
+  }
+
+  private void updateCache(List<SemwebResponseEntity> semwebEntities) {}
 }
