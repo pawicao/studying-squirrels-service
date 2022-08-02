@@ -2,11 +2,13 @@ package pl.edu.agh.pawicao.studying_squirrels_api.service.api;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.jena.query.*;
+import org.apache.jena.rdf.model.Literal;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.api.semweb.SemwebResponseEntity;
 import pl.edu.agh.pawicao.studying_squirrels_api.util.SemwebPair;
+import pl.edu.agh.pawicao.studying_squirrels_api.util.SemwebRates;
 import pl.edu.agh.pawicao.studying_squirrels_api.util.VarUtils;
 
 import java.text.MessageFormat;
@@ -19,8 +21,82 @@ public class SemwebService {
 
   private static final String SPOTLIGHT_API_LINK = "https://api.dbpedia-spotlight.org/en/annotate";
 
+  private static final Map<Integer, String> queriesTemplates =
+      Map.of(
+          8,
+              "select (SAMPLE(?firstNameUnsampled) as ?firstName) ?firstLink "
+                  + "(SAMPLE(?secondNameUnsampled) as ?secondName) ?secondLink "
+                  + "(SAMPLE(?thirdNameUnsampled) as ?thirdName) ?thirdLink where '{' "
+                  + "OPTIONAL '{' <{0}> foaf:name ?firstNameUnsampled . '}' "
+                  + "OPTIONAL '{' <{1}> foaf:name ?secondNameUnsampled . '}' "
+                  + "OPTIONAL '{' <{2}> foaf:name ?thirdNameUnsampled . '}' "
+                  + "<{0}> foaf:isPrimaryTopicOf ?firstLink . "
+                  + "<{1}> foaf:isPrimaryTopicOf ?secondLink . "
+                  + "<{2}> foaf:isPrimaryTopicOf ?thirdLink . "
+                  + "'{' <{1}> ?x <{2}> . '}' "
+                  + "UNION "
+                  + "'{' <{2}> ?y <{1}> . '}' "
+                  + "'{' <{0}> ?xx <{2}> . '}' "
+                  + "UNION "
+                  + "'{' <{2}> ?yy <{0}> . '}' "
+                  + "'{' <{1}> ?xxx <{0}> . '}' "
+                  + "UNION "
+                  + "'{' <{0}> ?yyy <{1}> . '}' '}' "
+                  + "GROUP BY ?firstLink ?secondLink ?thirdLink",
+          6,
+              "select (SAMPLE(?firstNameUnsampled) as ?firstName) ?firstLink "
+                  + "(SAMPLE(?secondNameUnsampled) as ?secondName) ?secondLink where '{' "
+                  + "OPTIONAL '{' <{0}> foaf:name ?firstNameUnsampled . '}' "
+                  + "OPTIONAL '{' <{1}> foaf:name ?secondNameUnsampled . '}' "
+                  + "'{' <{0}> ?x <{1}> . '}' "
+                  + "UNION "
+                  + "'{' <{1}> ?y <{0}> . '}' "
+                  + "<{0}> foaf:isPrimaryTopicOf ?firstLink . "
+                  + "<{1}> foaf:isPrimaryTopicOf ?secondLink . '}' "
+                  + "GROUP BY ?firstLink ?secondLink",
+          4,
+              "select (SAMPLE(?firstNameUnsampled) as ?firstName) ?firstLink "
+                  + "?middleUri (SAMPLE(?middleNameUnsampled) as ?middleName) ?middleLink "
+                  + "(SAMPLE(?secondNameUnsampled) as ?secondName) ?secondLink where '{' "
+                  + "OPTIONAL '{' <{0}> foaf:name ?firstNameUnsampled . '}' "
+                  + "OPTIONAL '{' <{1}> foaf:name ?secondNameUnsampled . '}' "
+                  + "OPTIONAL '{' ?middleUri foaf:name ?middleNameUnsampled . '}' "
+                  + "<{0}> foaf:isPrimaryTopicOf ?firstLink . "
+                  + "<{1}> foaf:isPrimaryTopicOf ?secondLink . "
+                  + "?middleUri foaf:isPrimaryTopicOf ?middleLink . "
+                  + "'{' <{0}> ?x ?middleUri . '}' "
+                  + "UNION "
+                  + "'{' ?middleUri ?y <{0}> . '}' "
+                  + "'{' ?middleUri ?xx <{1}> . '}' "
+                  + "UNION "
+                  + "'{' <{1}> ?yy ?middleUri . '}' '}' "
+                  + "GROUP BY ?firstLink ?secondLink ?middleLink ?middleUri",
+          2,
+              "select DISTINCT (SAMPLE(?firstNameUnsampled) as ?firstName) ?firstLink "
+                  + "?middleUri1 (SAMPLE(?middleName1Unsampled) as ?middleName1) ?middleLink1 "
+                  + "?middleUri2 (SAMPLE(?middleName2Unsampled) as ?middleName2) ?middleLink2 "
+                  + "(SAMPLE(?secondNameUnsampled) as ?secondName) ?secondLink where '{' "
+                  + "OPTIONAL '{' <{0}> foaf:name ?firstNameUnsampled . '}' "
+                  + "<{0}> foaf:isPrimaryTopicOf ?firstLink . "
+                  + "'{' <{0}> ?x ?middleUri1 . '}' "
+                  + "UNION "
+                  + "'{' ?middleUri1 ?v <{0}> . '}' "
+                  + "OPTIONAL '{' ?middleUri1 foaf:name ?middleName1Unsampled . '}' "
+                  + "?middleUri1 foaf:isPrimaryTopicOf ?middleLink1 . "
+                  + "OPTIONAL '{' ?middleUri2 foaf:name ?middleName2Unsampled . '}' "
+                  + "?middleUri2 foaf:isPrimaryTopicOf ?middleLink2 . "
+                  + "'{' ?middleUri2 ?x ?middleUri1 . '}' "
+                  + "UNION "
+                  + "'{' ?middleUri1 ?v ?middleUri2 . '}' "
+                  + "'{' <{1}> ?xx ?middleUri2 . '}' "
+                  + "UNION "
+                  + "'{' ?middleUri2 ?vv <{1}> . '}' "
+                  + "OPTIONAL '{' <{1}> foaf:name ?secondNameUnsampled . '}' "
+                  + "<{1}> foaf:isPrimaryTopicOf ?secondLink . '}' "
+                  + "GROUP BY ?firstLink ?secondLink ?middleLink1 ?middleUri1 ?middleLink2 ?middleUri2");
+
   public List<String> queryDBpediaSpotlight(String text, double confidenceRate) {
-    List<String> resourceUris = new ArrayList<>();
+    Set<String> resourceUris = new HashSet<>();
 
     HttpHeaders headers = new HttpHeaders();
     headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
@@ -35,12 +111,12 @@ public class SemwebService {
             JsonNode.class);
 
     if (response.getStatusCode() != HttpStatus.OK) {
-      return resourceUris;
+      return new ArrayList<>();
     }
     try {
       JsonNode resources = Objects.requireNonNull(response.getBody()).get("Resources");
       if (resources == null) {
-        return resourceUris;
+        return new ArrayList<>();
       }
       for (final JsonNode resource : resources) {
         resourceUris.add(resource.get("@URI").asText());
@@ -48,92 +124,146 @@ public class SemwebService {
     } catch (Exception e) {
       e.printStackTrace();
     }
-    return resourceUris;
+    return new ArrayList<>(resourceUris);
+  }
+
+  private void handleDBpediaLevels(
+      Map<String, List<SemwebPair>> entityLinks,
+      QuerySolution soln,
+      double relatednessRate,
+      String firstEntity,
+      String secondEntity,
+      String thirdEntity) {
+    switch ((int) (relatednessRate * 10)) {
+      case 8:
+        handleDbpediaZeroLevel(entityLinks, soln, firstEntity, secondEntity, thirdEntity);
+        break;
+      case 6:
+        handleDbpediaFirstLevel(entityLinks, soln, firstEntity, secondEntity);
+        break;
+      case 4:
+        handleDbpediaSecondLevel(entityLinks, soln, firstEntity, secondEntity);
+        break;
+      default:
+        handleDbpediaThirdLevel(entityLinks, soln, firstEntity, secondEntity);
+    }
+  }
+
+  private void querySingleDBpediaConnection(
+      Map<String, List<SemwebPair>> entityLinks,
+      double relatednessRate,
+      String firstEntity,
+      String secondEntity,
+      String thirdEntity)
+      throws QueryException {
+    // JENA operations start
+    String queryString =
+        "PREFIX foaf: <http://xmlns.com/foaf/0.1/> "
+            + getQuery(relatednessRate, firstEntity, secondEntity, thirdEntity);
+    System.out.println("Executing DBpedia query:");
+    System.out.println(queryString);
+    Query query = QueryFactory.create(queryString);
+    try (QueryExecution qexec =
+        QueryExecutionFactory.sparqlService("http://dbpedia.org/sparql", query); ) {
+      ResultSet results = qexec.execSelect();
+      while (results.hasNext()) {
+        QuerySolution soln = results.nextSolution();
+        handleDBpediaLevels(
+            entityLinks, soln, relatednessRate, firstEntity, secondEntity, thirdEntity);
+      }
+    }
+  }
+
+  private List<SemwebResponseEntity> queryDBPediaConnections(
+      List<String> spotlightEntities, double relatednessRate) {
+    Map<String, List<SemwebPair>> entityLinks = new HashMap<>();
+    if (relatednessRate == SemwebRates.INITIAL_RATE) {
+      for (int i = 0; i < spotlightEntities.size(); i++) {
+        for (int j = i + 1; j < spotlightEntities.size(); j++) {
+          for (int k = j + 1; k < spotlightEntities.size(); k++) {
+            try {
+              querySingleDBpediaConnection(
+                  entityLinks,
+                  relatednessRate,
+                  spotlightEntities.get(i),
+                  spotlightEntities.get(j),
+                  spotlightEntities.get(k));
+            } catch (QueryException ex) {
+              return mapSemwebPairsToEntities(entityLinks);
+            }
+          }
+        }
+      }
+    } else {
+      for (int i = 0; i < spotlightEntities.size(); i++) {
+        for (int j = i + 1; j < spotlightEntities.size(); j++) {
+          try {
+            querySingleDBpediaConnection(
+                entityLinks,
+                relatednessRate,
+                spotlightEntities.get(i),
+                spotlightEntities.get(j),
+                null);
+          } catch (QueryException ex) {
+            return mapSemwebPairsToEntities(entityLinks);
+          }
+        }
+      }
+    }
+    List<SemwebResponseEntity> result = mapSemwebPairsToEntities(entityLinks);
+    if (result.isEmpty() && relatednessRate == 0.8) {
+      // if no connections found, return only spotlight entities
+      System.out.println("No connections found, returning spotlight entities");
+      System.out.println("- Analyzing: " + spotlightEntities);
+      for (String spotlightEntity : spotlightEntities) {
+        String queryString =
+            "PREFIX foaf: <http://xmlns.com/foaf/0.1/> "
+                + getQueryForSpotlightEntities(spotlightEntity);
+        Query query = QueryFactory.create(queryString);
+        try (QueryExecution qexec =
+            QueryExecutionFactory.sparqlService("http://dbpedia.org/sparql", query)) {
+          ResultSet results = qexec.execSelect();
+          while (results.hasNext()) {
+            QuerySolution soln = results.nextSolution();
+            String link = soln.getResource("link").getURI();
+            String name = getSemwebName(soln.getLiteral("name"), link);
+            result.add(new SemwebResponseEntity(spotlightEntity, name, link));
+          }
+        } catch (QueryException ex) {
+          return result;
+        }
+      }
+    }
+    return result;
   }
 
   public List<SemwebResponseEntity> queryDBpedia(
       List<String> spotlightEntities, double relatednessRate) {
     System.out.println(
         "Sanity check: queryDBpedia() run with the relatednessRate of " + relatednessRate);
-    Map<String, List<SemwebPair>> entityLinks = new HashMap<>();
-    for (int i = 0; i < spotlightEntities.size(); i++) {
-      for (int j = i + 1; j < spotlightEntities.size(); j++) {
-        // JENA operations start
-        String queryString =
-            "PREFIX foaf: <http://xmlns.com/foaf/0.1/> "
-                + getQuery(relatednessRate, spotlightEntities.get(i), spotlightEntities.get(j));
-        System.out.println("Executing DBpedia query:");
-        System.out.println(queryString);
-        Query query = QueryFactory.create(queryString);
-        QueryExecution qexec =
-            QueryExecutionFactory.sparqlService("http://dbpedia.org/sparql", query);
-        try {
-          ResultSet results = qexec.execSelect();
-          while (results.hasNext()) {
-            QuerySolution soln = results.nextSolution();
-            if (relatednessRate == 0.8) {
-              handleDbpediaFirstLevel(
-                  entityLinks, soln, spotlightEntities.get(i), spotlightEntities.get(j));
-            } else if (relatednessRate == 0.6) {
-              handleDbpediaSecondLevel(
-                  entityLinks, soln, spotlightEntities.get(i), spotlightEntities.get(j));
-            } else {
-              handleDbpediaThirdLevel(
-                  entityLinks, soln, spotlightEntities.get(i), spotlightEntities.get(j));
-            }
-          }
-        } catch (QueryException ex) {
-          return mapSemwebPairsToEntities(entityLinks);
-        } finally {
-          qexec.close();
-        }
-      }
-    }
-    // TODO: updateCache here actually
-    return mapSemwebPairsToEntities(entityLinks);
+    return queryDBPediaConnections(spotlightEntities, relatednessRate);
   }
 
-  private String getQuery(double relatednessRate, String firstUri, String secondUri) {
-    switch ((int) (relatednessRate * 10)) {
-      case 8:
-        return MessageFormat.format(
-            "select (SAMPLE(?firstNameUnsampled) as ?firstName) ?firstLink "
-                + "(SAMPLE(?secondNameUnsampled) as ?secondName) ?secondLink where '{' "
-                + "<{0}> foaf:name ?firstNameUnsampled ; foaf:isPrimaryTopicOf ?firstLink ; ?x <{1}> . "
-                + "<{1}> foaf:name ?secondNameUnsampled ; foaf:isPrimaryTopicOf ?secondLink . '}' "
-                + "GROUP BY ?firstLink ?secondLink",
-            firstUri, secondUri);
-      case 6:
-        return MessageFormat.format(
-            "select (SAMPLE(?firstNameUnsampled) as ?firstName) ?firstLink "
-                + "?middleUri (SAMPLE(?middleNameUnsampled) as ?middleName) ?middleLink "
-                + "(SAMPLE(?secondNameUnsampled) as ?secondName) ?secondLink where '{' "
-                + "<{0}> foaf:name ?firstNameUnsampled ; foaf:isPrimaryTopicOf ?firstLink ; ?x ?middleUri . "
-                + "?middleUri foaf:name ?middleNameUnsampled ; foaf:isPrimaryTopicOf ?middleLink ; ?y <{1}> . "
-                + "<{1}> foaf:name ?secondNameUnsampled ; foaf:isPrimaryTopicOf ?secondLink . '}' "
-                + "GROUP BY ?firstLink ?secondLink ?middleLink ?middleUri",
-            firstUri, secondUri);
-      case 4:
-        return MessageFormat.format(
-            "select DISTINCT (SAMPLE(?firstNameUnsampled) as ?firstName) ?firstLink "
-                + "?middleUri1 (SAMPLE(?middleName1Unsampled) as ?middleName1) ?middleLink1 "
-                + "?middleUri2 (SAMPLE(?middleName2Unsampled) as ?middleName2) ?middleLink2 "
-                + "(SAMPLE(?secondNameUnsampled) as ?secondName) ?secondLink where '{' "
-                + "<{0}> foaf:name ?firstNameUnsampled ; foaf:isPrimaryTopicOf ?firstLink . "
-                + "'{' <{0}> ?x ?middleUri1 . '}' "
-                + "UNION "
-                + "'{' ?middleUri1 ?v <{0}> . '}' "
-                + "?middleUri1 foaf:name ?middleName1Unsampled ; foaf:isPrimaryTopicOf ?middleLink1 ; ?y ?middleUri2 . "
-                + "?middleUri2 foaf:name ?middleName2Unsampled ; foaf:isPrimaryTopicOf ?middleLink2 . "
-                + "'{' <{1}> ?x ?middleUri2 . '}' "
-                + "UNION "
-                + "'{' ?middleUri2 ?v <{1}> . '}' "
-                + "<{1}> foaf:name ?secondNameUnsampled ; foaf:isPrimaryTopicOf ?secondLink . '}' "
-                + "GROUP BY ?firstLink ?secondLink ?middleLink1 ?middleUri1 ?middleLink2 ?middleUri2",
-            firstUri, secondUri);
-      default:
-        return "";
+  private String getQuery(
+      double relatednessRate, String firstUri, String secondUri, String thirdUri) {
+    int key = (int) (relatednessRate * 10);
+    String query = queriesTemplates.get(key);
+    if (query == null) {
+      return "";
     }
+    if (key > 7) {
+      return MessageFormat.format(query, firstUri, secondUri, thirdUri);
+    }
+    return MessageFormat.format(query, firstUri, secondUri);
+  }
+
+  private String getQueryForSpotlightEntities(String uri) {
+    return MessageFormat.format(
+        "SELECT (SAMPLE(?nameUnsampled) as ?name) ?link "
+            + "WHERE '{' "
+            + "OPTIONAL '{' <{0}> foaf:name ?nameUnsampled . '}' <{0}> foaf:isPrimaryTopicOf ?link . '}' "
+            + "GROUP BY ?link",
+        uri);
   }
 
   private SemwebPair findExistingSemwebPair(
@@ -158,17 +288,62 @@ public class SemwebService {
     return null;
   }
 
+  private String getSemwebName(Literal nameLiteral, String link) {
+    return nameLiteral == null
+        ? VarUtils.getAlternativeNameFromLink(link)
+        : VarUtils.removeSuffixIfExists(nameLiteral.toString(), "@en");
+  }
+
+  private void handleDbpediaZeroLevel(
+      Map<String, List<SemwebPair>> entityLinks,
+      QuerySolution soln,
+      String firstSpotlightEntity,
+      String secondSpotlightEntity,
+      String thirdSpotlightEntity) {
+    String firstLink = soln.getResource("firstLink").getURI();
+    String secondLink = soln.getResource("secondLink").getURI();
+    String thirdLink = soln.getResource("thirdLink").getURI();
+    String firstName = getSemwebName(soln.getLiteral("firstName"), firstLink);
+    String secondName = getSemwebName(soln.getLiteral("secondName"), secondLink);
+    String thirdName = getSemwebName(soln.getLiteral("thirdName"), thirdLink);
+    modifyEntityPair(
+        entityLinks,
+        1,
+        firstSpotlightEntity,
+        firstName,
+        firstLink,
+        secondSpotlightEntity,
+        secondName,
+        secondLink);
+    modifyEntityPair(
+        entityLinks,
+        1,
+        firstSpotlightEntity,
+        firstName,
+        firstLink,
+        thirdSpotlightEntity,
+        thirdName,
+        thirdLink);
+    modifyEntityPair(
+        entityLinks,
+        1,
+        secondSpotlightEntity,
+        secondName,
+        secondLink,
+        thirdSpotlightEntity,
+        thirdName,
+        thirdLink);
+  }
+
   private void handleDbpediaFirstLevel(
       Map<String, List<SemwebPair>> entityLinks,
       QuerySolution soln,
       String firstSpotlightEntity,
       String secondSpotlightEntity) {
-    String firstName =
-        VarUtils.removeSuffixIfExists(soln.getLiteral("firstName").toString(), "@en");
     String firstLink = soln.getResource("firstLink").getURI();
-    String secondName =
-        VarUtils.removeSuffixIfExists(soln.getLiteral("secondName").toString(), "@en");
     String secondLink = soln.getResource("secondLink").getURI();
+    String firstName = getSemwebName(soln.getLiteral("firstName"), firstLink);
+    String secondName = getSemwebName(soln.getLiteral("secondName"), secondLink);
     modifyEntityPair(
         entityLinks,
         1,
@@ -185,16 +360,13 @@ public class SemwebService {
       QuerySolution soln,
       String firstSpotlightEntity,
       String secondSpotlightEntity) {
-    String firstName =
-        VarUtils.removeSuffixIfExists(soln.getLiteral("firstName").toString(), "@en");
     String firstLink = soln.getResource("firstLink").getURI();
-    String middleName =
-        VarUtils.removeSuffixIfExists(soln.getLiteral("middleName").toString(), "@en");
-    String middleUri = soln.getResource("middleUri").getURI();
-    String middleLink = soln.getResource("middleLink").getURI();
-    String secondName =
-        VarUtils.removeSuffixIfExists(soln.getLiteral("secondName").toString(), "@en");
     String secondLink = soln.getResource("secondLink").getURI();
+    String middleLink = soln.getResource("middleLink").getURI();
+    String middleUri = soln.getResource("middleUri").getURI();
+    String firstName = getSemwebName(soln.getLiteral("firstName"), firstLink);
+    String secondName = getSemwebName(soln.getLiteral("secondName"), secondLink);
+    String middleName = getSemwebName(soln.getLiteral("middleName"), middleLink);
     modifyEntityPair(
         entityLinks,
         2,
@@ -229,20 +401,16 @@ public class SemwebService {
       QuerySolution soln,
       String firstSpotlightEntity,
       String secondSpotlightEntity) {
-    String firstName =
-        VarUtils.removeSuffixIfExists(soln.getLiteral("firstName").toString(), "@en");
     String firstLink = soln.getResource("firstLink").getURI();
-    String middleName1 =
-        VarUtils.removeSuffixIfExists(soln.getLiteral("middleName1").toString(), "@en");
-    String middleUri1 = soln.getResource("middleUri1").getURI();
     String middleLink1 = soln.getResource("middleLink1").getURI();
-    String secondName =
-        VarUtils.removeSuffixIfExists(soln.getLiteral("secondName").toString(), "@en");
-    String secondLink = soln.getResource("secondLink").getURI();
-    String middleName2 =
-        VarUtils.removeSuffixIfExists(soln.getLiteral("middleName2").toString(), "@en");
-    String middleUri2 = soln.getResource("middleUri2").getURI();
     String middleLink2 = soln.getResource("middleLink2").getURI();
+    String secondLink = soln.getResource("secondLink").getURI();
+    String middleUri1 = soln.getResource("middleUri1").getURI();
+    String middleUri2 = soln.getResource("middleUri2").getURI();
+    String firstName = getSemwebName(soln.getLiteral("firstName"), firstLink);
+    String middleName1 = getSemwebName(soln.getLiteral("middleName1"), middleLink1);
+    String middleName2 = getSemwebName(soln.getLiteral("middleName2"), middleLink2);
+    String secondName = getSemwebName(soln.getLiteral("secondName"), secondLink);
     modifyEntityPair(
         entityLinks,
         3,

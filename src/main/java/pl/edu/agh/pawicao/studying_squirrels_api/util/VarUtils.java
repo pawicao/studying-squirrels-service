@@ -9,4 +9,8 @@ public class VarUtils {
   public static String removeSuffixIfExists(String key, String suffix) {
     return key.endsWith(suffix) ? key.substring(0, key.length() - suffix.length()) : key;
   }
+
+  public static String getAlternativeNameFromLink(String link) {
+    return link.substring(link.lastIndexOf('/') + 1).trim().replace('_', ' ');
+  }
 }

@@ -1,6 +1,7 @@
 package pl.edu.agh.pawicao.studying_squirrels_api.model.node;
 
 import lombok.Data;
+import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
@@ -20,8 +21,9 @@ public class SemwebEntity {
     this.wikipediaUrl = link;
   }
 
-  @Id private String uri;
+  @Id @GeneratedValue private Long id;
 
+  private String uri;
   private String name;
   private String wikipediaUrl;
 

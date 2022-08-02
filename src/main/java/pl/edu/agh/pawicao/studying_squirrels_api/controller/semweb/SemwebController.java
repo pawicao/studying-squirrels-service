@@ -155,10 +155,7 @@ public class SemwebController {
         if (responseProps.getRelatednessRate() < SemwebRates.MIN_DBPEDIA_RATE) {
           responseProps.setSpotlightEntities(new ArrayList<>());
           responseProps.setRelatednessRate(null);
-          // TODO: do a proper check here and return at least the spotlight ones if nothing more can
-          // TODO: v2: always return the spotlightEntities on top!
           // TODO: v3? union?
-          // be done
         }
         System.out.println("Recurrently running the process with the following parameters:");
         System.out.println("- isCacheSeeked: " + responseProps.getIsCacheSeeked());
