@@ -531,6 +531,12 @@ public class SemwebService {
     }
     if (relatednessRate < 0.6) {
       result.keySet().removeIf(key -> result.get(key).getOccurrences() < 3);
+      result.forEach(
+          (k, v) -> {
+            if (v.getOccurrences() > result.size()) {
+              v.setOccurrences(result.size() - 1);
+            }
+          });
     }
     return result;
   }
