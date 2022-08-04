@@ -11,18 +11,16 @@ import pl.edu.agh.pawicao.studying_squirrels_api.model.node.SemwebEntity;
 @Setter
 public class SemwebEntityConnection {
 
-    @Id
-    @GeneratedValue
-    private Long id;
+  @Id @GeneratedValue private Long id;
 
-    @JsonIgnoreProperties({"relatedEntities", "relatedEntitiesIncoming"})
-    @StartNode
-    private SemwebEntity startEntity;
+  @JsonIgnoreProperties({"relatedEntities", "relatedEntitiesIncoming"})
+  @StartNode
+  private SemwebEntity startEntity;
 
-    @JsonIgnoreProperties({"relatedEntities", "relatedEntitiesIncoming"})
-    @EndNode
-    private SemwebEntity endEntity;
+  @JsonIgnoreProperties({"relatedEntities", "relatedEntitiesIncoming"})
+  @EndNode
+  private SemwebEntity endEntity;
 
-    private Integer shortestDistance;
-    private Integer numberOfConnections;
+  private Integer shortestDistance;
+  private Integer numberOfConnections;
 }

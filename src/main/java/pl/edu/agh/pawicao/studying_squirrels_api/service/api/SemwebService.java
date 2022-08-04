@@ -3,10 +3,14 @@ package pl.edu.agh.pawicao.studying_squirrels_api.service.api;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Literal;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import pl.edu.agh.pawicao.studying_squirrels_api.model.api.semweb.SemwebResponseEntity;
+import pl.edu.agh.pawicao.studying_squirrels_api.model.node.SemwebEntity;
+import pl.edu.agh.pawicao.studying_squirrels_api.model.relationship.SemwebEntityConnection;
+import pl.edu.agh.pawicao.studying_squirrels_api.repository.SemwebRepository;
 import pl.edu.agh.pawicao.studying_squirrels_api.util.SemwebPair;
 import pl.edu.agh.pawicao.studying_squirrels_api.util.SemwebRates;
 import pl.edu.agh.pawicao.studying_squirrels_api.util.VarUtils;
@@ -17,6 +21,8 @@ import java.util.*;
 @Service
 public class SemwebService {
 
+  @Autowired private SemwebRepository semwebRepository;
+
   private static final RestTemplate restTemplate = new RestTemplate();
 
   private static final String SPOTLIGHT_API_LINK = "https://api.dbpedia-spotlight.org/en/annotate";
@@ -24,7 +30,7 @@ public class SemwebService {
   private static final Map<Integer, String> queriesTemplates =
       Map.of(
           8,
-              "select (SAMPLE(?firstNameUnsampled) as ?firstName) ?firstLink "
+              "select distinct (SAMPLE(?firstNameUnsampled) as ?firstName) ?firstLink "
                   + "(SAMPLE(?secondNameUnsampled) as ?secondName) ?secondLink "
                   + "(SAMPLE(?thirdNameUnsampled) as ?thirdName) ?thirdLink where '{' "
                   + "OPTIONAL '{' <{0}> foaf:name ?firstNameUnsampled . '}' "
@@ -163,15 +169,14 @@ public class SemwebService {
     System.out.println("Executing DBpedia query:");
     System.out.println(queryString);
     Query query = QueryFactory.create(queryString);
-    try (QueryExecution qexec =
-        QueryExecutionFactory.sparqlService("http://dbpedia.org/sparql", query); ) {
-      ResultSet results = qexec.execSelect();
-      while (results.hasNext()) {
-        QuerySolution soln = results.nextSolution();
-        handleDBpediaLevels(
-            entityLinks, soln, relatednessRate, firstEntity, secondEntity, thirdEntity);
-      }
+    QueryExecution qexec = QueryExecutionFactory.sparqlService("http://dbpedia.org/sparql", query);
+    ResultSet results = qexec.execSelect();
+    while (results.hasNext()) {
+      QuerySolution soln = results.nextSolution();
+      handleDBpediaLevels(
+          entityLinks, soln, relatednessRate, firstEntity, secondEntity, thirdEntity);
     }
+    qexec.close();
   }
 
   private List<SemwebResponseEntity> queryDBPediaConnections(
@@ -189,7 +194,9 @@ public class SemwebService {
                   spotlightEntities.get(j),
                   spotlightEntities.get(k));
             } catch (QueryException ex) {
-              return mapSemwebPairsToEntities(entityLinks);
+              System.out.println("EXCEPTION " + relatednessRate);
+              // ex.printStackTrace();
+              return new ArrayList<>();
             }
           }
         }
@@ -205,36 +212,45 @@ public class SemwebService {
                 spotlightEntities.get(j),
                 null);
           } catch (QueryException ex) {
-            return mapSemwebPairsToEntities(entityLinks);
+            return new ArrayList<>();
           }
         }
       }
     }
-    List<SemwebResponseEntity> result = mapSemwebPairsToEntities(entityLinks);
-    if (result.isEmpty() && relatednessRate == 0.8) {
-      // if no connections found, return only spotlight entities
-      System.out.println("No connections found, returning spotlight entities");
-      System.out.println("- Analyzing: " + spotlightEntities);
-      for (String spotlightEntity : spotlightEntities) {
-        String queryString =
-            "PREFIX foaf: <http://xmlns.com/foaf/0.1/> "
-                + getQueryForSpotlightEntities(spotlightEntity);
-        Query query = QueryFactory.create(queryString);
-        try (QueryExecution qexec =
-            QueryExecutionFactory.sparqlService("http://dbpedia.org/sparql", query)) {
-          ResultSet results = qexec.execSelect();
-          while (results.hasNext()) {
-            QuerySolution soln = results.nextSolution();
-            String link = soln.getResource("link").getURI();
-            String name = getSemwebName(soln.getLiteral("name"), link);
-            result.add(new SemwebResponseEntity(spotlightEntity, name, link));
+    Map<String, SemwebResponseEntity> result =
+        mapSemwebPairsToEntities(entityLinks, relatednessRate);
+    if (result.isEmpty()) {
+      List<SemwebResponseEntity> listResult = new ArrayList<>();
+      if (relatednessRate >= 0.6) {
+        // if no connections found, return only spotlight entities
+        System.out.println("No connections found, returning spotlight entities");
+        System.out.println("- Analyzing: " + spotlightEntities);
+        for (String spotlightEntity : spotlightEntities) {
+          String queryString =
+              "PREFIX foaf: <http://xmlns.com/foaf/0.1/> "
+                  + getQueryForSpotlightEntities(spotlightEntity);
+          Query query = QueryFactory.create(queryString);
+          try (QueryExecution qexec =
+              QueryExecutionFactory.sparqlService("http://dbpedia.org/sparql", query)) {
+            ResultSet results = qexec.execSelect();
+            while (results.hasNext()) {
+              QuerySolution soln = results.nextSolution();
+              String link = soln.getResource("link").getURI();
+              String name = getSemwebName(soln.getLiteral("name"), link);
+              listResult.add(new SemwebResponseEntity(spotlightEntity, name, link));
+            }
+          } catch (QueryException ex) {
+            return listResult;
           }
-        } catch (QueryException ex) {
-          return result;
         }
       }
+      return listResult;
     }
-    return result;
+    updateCache(entityLinks, result);
+
+    List<SemwebResponseEntity> listResult = new ArrayList<>(result.values());
+    listResult.sort(Comparator.comparingInt(SemwebResponseEntity::getOccurrences).reversed());
+    return listResult;
   }
 
   public List<SemwebResponseEntity> queryDBpedia(
@@ -306,6 +322,9 @@ public class SemwebService {
     String firstName = getSemwebName(soln.getLiteral("firstName"), firstLink);
     String secondName = getSemwebName(soln.getLiteral("secondName"), secondLink);
     String thirdName = getSemwebName(soln.getLiteral("thirdName"), thirdLink);
+    System.out.println(firstLink);
+    System.out.println(secondLink);
+    System.out.println(thirdLink);
     modifyEntityPair(
         entityLinks,
         1,
@@ -489,8 +508,8 @@ public class SemwebService {
     }
   }
 
-  private List<SemwebResponseEntity> mapSemwebPairsToEntities(
-      Map<String, List<SemwebPair>> entityLinks) {
+  private Map<String, SemwebResponseEntity> mapSemwebPairsToEntities(
+      Map<String, List<SemwebPair>> entityLinks, double relatednessRate) {
     Map<String, SemwebResponseEntity> result = new HashMap<>();
     for (List<SemwebPair> semwebPairList : entityLinks.values()) {
       for (SemwebPair semwebPair : semwebPairList) {
@@ -510,15 +529,79 @@ public class SemwebService {
         }
       }
     }
-    List<SemwebResponseEntity> resultList = new ArrayList<>(result.values());
-    resultList.sort(Comparator.comparingInt(SemwebResponseEntity::getOccurrences).reversed());
-    return resultList;
+    if (relatednessRate < 0.6) {
+      result.keySet().removeIf(key -> result.get(key).getOccurrences() < 3);
+    }
+    return result;
   }
 
-  public List<SemwebResponseEntity> queryCache(
+  public Set<SemwebResponseEntity> queryCache(
       List<String> spotlightEntities, double relatednessRate) {
-    return null;
+    Set<SemwebResponseEntity> result = new HashSet<>();
+    for (int i = 0; i < spotlightEntities.size(); ++i) {
+      for (int j = i + 1; j < spotlightEntities.size(); ++j) {
+        List<SemwebEntity> cachedPair =
+            semwebRepository.findPairsByRelatedness(
+                spotlightEntities.get(i),
+                spotlightEntities.get(j),
+                relatednessRate,
+                SemwebRates.NUMBER_OF_CONNECTIONS_DIVIDER);
+        if (cachedPair == null || cachedPair.isEmpty()) {
+          continue;
+        }
+        SemwebEntity firstEntity = cachedPair.get(0);
+        SemwebEntity secondEntity = cachedPair.get(1);
+        SemwebEntityConnection relationshipDetails =
+            firstEntity.getRelatedEntities().isEmpty()
+                ? firstEntity.getRelatedEntitiesIncoming().get(0)
+                : firstEntity.getRelatedEntities().get(0);
+        int relatednessScore =
+            relationshipDetails.getNumberOfConnections()
+                / SemwebRates.NUMBER_OF_CONNECTIONS_DIVIDER
+                / relationshipDetails.getShortestDistance()
+                * 10;
+        result.add(new SemwebResponseEntity(firstEntity, relatednessScore));
+        result.add(new SemwebResponseEntity(secondEntity, relatednessScore));
+      }
+    }
+    return result;
   }
 
-  private void updateCache(List<SemwebResponseEntity> semwebEntities) {}
+  public void updateCache(
+      Map<String, List<SemwebPair>> semwebEntities, Map<String, SemwebResponseEntity> occurences) {
+    for (List<SemwebPair> semwebPairList : semwebEntities.values()) {
+      for (SemwebPair semwebPair : semwebPairList) {
+        SemwebResponseEntity first = semwebPair.getFirst();
+        SemwebResponseEntity second = semwebPair.getSecond();
+        if (occurences.containsKey(first.getUri()) && occurences.containsKey(second.getUri())) {
+          List<SemwebEntity> cachedPair =
+              semwebRepository.findPairByUris(first.getUri(), second.getUri());
+          if (cachedPair == null || cachedPair.isEmpty()) {
+            semwebRepository.createPairConnection(
+                first.getUri(),
+                first.getName(),
+                first.getWikipediaUrl(),
+                second.getUri(),
+                second.getName(),
+                second.getWikipediaUrl(),
+                semwebPair.getNumberOfConnections(),
+                semwebPair.getShortestDistance());
+            continue;
+          }
+          SemwebEntity firstEntity = cachedPair.get(0);
+          List<SemwebEntityConnection> relationshipDetails =
+              firstEntity.getRelatedEntities().isEmpty()
+                  ? firstEntity.getRelatedEntitiesIncoming()
+                  : firstEntity.getRelatedEntities();
+          int newNumberOfConnections = relationshipDetails.get(0).getNumberOfConnections() + 1;
+          int newShortestDistance = relationshipDetails.get(0).getShortestDistance() + 1;
+          semwebRepository.updatePairConnection(
+              semwebPair.getFirst().getUri(),
+              semwebPair.getSecond().getUri(),
+              newNumberOfConnections,
+              newShortestDistance);
+        }
+      }
+    }
+  }
 }

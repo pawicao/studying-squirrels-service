@@ -17,6 +17,7 @@ import pl.edu.agh.pawicao.studying_squirrels_api.util.SemwebRates;
 import pl.edu.agh.pawicao.studying_squirrels_api.util.VarUtils;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -46,6 +47,38 @@ public class SemwebController {
         .filter(e -> !propsEntitiesURIs.contains(e.getUri()))
         .collect(Collectors.toList());
   }
+  /*
+  @GetMapping("/debug")
+  ResponseEntity<Boolean> debug() {
+    Map<String, List<SemwebPair>> debug = new HashMap<>();
+    SemwebResponseEntity firstEntity =
+        new SemwebResponseEntity(
+            "http://dbpedia.org/resource/Leonardo_da_Vinci",
+            "Leonardo da Vinci",
+            "http://en.wikipedia.org/wiki/Leonardo_da_Vinci");
+    SemwebResponseEntity secondEntity =
+        new SemwebResponseEntity(
+            "http://dbpedia.org/resource/Michelangelo",
+            "Michelangelo",
+            "http://en.wikipedia.org/wiki/Michelangelo");
+    SemwebPair semwebPair = new SemwebPair(firstEntity, secondEntity, 1, 10);
+    List<SemwebPair> debugList = new ArrayList<>();
+    debugList.add(semwebPair);
+    debug.put("makarena", debugList);
+    semwebService.updateCache(debug);
+    return ResponseEntity.ok(true);
+  }
+
+  @GetMapping("/debug2")
+  ResponseEntity<List<SemwebResponseEntity>> debug2() {
+    List<String> spotlightDebugEntities = new ArrayList<>();
+    spotlightDebugEntities.add("http://dbpedia.org/resource/Leonardo_da_Vinci");
+    spotlightDebugEntities.add("http://dbpedia.org/resource/Michelangelo");
+    List<SemwebResponseEntity> result =
+        filterEntities(semwebService.queryCache(spotlightDebugEntities, 0.2), new ArrayList<>());
+    result.sort(Comparator.comparingInt(SemwebResponseEntity::getOccurrences).reversed());
+    return ResponseEntity.ok(result);
+  }*/
 
   @PostMapping("/extract")
   ResponseEntity<SemwebResponse> extractEntities(@RequestBody SemwebRequest requestBody) {
@@ -125,17 +158,17 @@ public class SemwebController {
       responseProps.setSpotlightEntities(spotlightEntities);
     }
     System.out.println(spotlightEntities.size() + " spotlightEntities found. Moving on");
+
     // get entities from cache
-    /*    if (!requestProps.getIsCacheSeeked()) {
+    if (!requestProps.getIsCacheSeeked()) {
       System.out.println("semwebService.queryCache()");
       semwebEntities =
           filterEntities(
               semwebService.queryCache(spotlightEntities, requestProps.getRelatednessRate()),
               requestProps.getExtractedEntities());
       responseProps.setIsCacheSeeked(true);
-      // TODO: get relatednessScore for each and sort them accordingly
-    }*/
-    // TODO: Uncomment this!
+      semwebEntities.sort(Comparator.comparingInt(SemwebResponseEntity::getOccurrences).reversed());
+    }
 
     // get entities from dbpedia query
     if (semwebEntities.isEmpty()) {
@@ -155,7 +188,6 @@ public class SemwebController {
         if (responseProps.getRelatednessRate() < SemwebRates.MIN_DBPEDIA_RATE) {
           responseProps.setSpotlightEntities(new ArrayList<>());
           responseProps.setRelatednessRate(null);
-          // TODO: v3? union?
         }
         System.out.println("Recurrently running the process with the following parameters:");
         System.out.println("- isCacheSeeked: " + responseProps.getIsCacheSeeked());
@@ -172,9 +204,6 @@ public class SemwebController {
                     responseProps.getRelatednessRate(),
                     SemwebPropertiesEntity.mapToPropertyEntities(semwebEntities),
                     responseProps.getSpotlightEntities())));
-      } else {
-        // TODO: updateCache
-        System.out.println("Cache will be updated here!");
       }
     }
 
