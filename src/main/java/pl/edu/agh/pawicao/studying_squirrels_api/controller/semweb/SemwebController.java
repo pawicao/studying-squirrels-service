@@ -202,7 +202,7 @@ public class SemwebController {
                     responseProps.getIsCacheSeeked(),
                     responseProps.getConfidenceRate(),
                     responseProps.getRelatednessRate(),
-                    SemwebPropertiesEntity.mapToPropertyEntities(semwebEntities),
+                    requestProps.getExtractedEntities(),
                     responseProps.getSpotlightEntities())));
       }
     }

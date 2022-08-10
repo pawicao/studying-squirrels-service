@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class SemwebPropertiesEntity { // TODO: Edge case gdy tylko mamy jedno entity ze spotlighta
+public class SemwebPropertiesEntity {
 
   private static SemwebPropertiesEntity mapToPropertyEntity(SemwebResponseEntity semwebEntity) {
     SemwebPropertiesEntity semwebPropertiesEntity = new SemwebPropertiesEntity();
