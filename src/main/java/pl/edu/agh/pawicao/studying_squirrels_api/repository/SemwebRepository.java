@@ -30,7 +30,7 @@ public interface SemwebRepository extends Neo4jRepository<SemwebEntity, Long> {
   @Query(
       "MERGE (firstEntity:SemwebEntity {uri: $firstUri, name: $firstName, wikipediaUrl: $firstWikipediaUrl}) "
           + "MERGE (secondEntity:SemwebEntity {uri: $secondUri, name: $secondName, wikipediaUrl: $secondWikipediaUrl}) "
-          + "MERGE (firstEntity)-[isEntity:IS_ENTITY {numberOfConnections: $numberOfConnections, shortestDistance: $shortestDistance}]-(secondEntity) "
+          + "MERGE (firstEntity)-[isEntity:IS_RELATED {numberOfConnections: $numberOfConnections, shortestDistance: $shortestDistance}]-(secondEntity) "
           + "RETURN true")
   boolean createPairConnection(
       String firstUri,
