@@ -10,15 +10,23 @@ public interface SemwebRepository extends Neo4jRepository<SemwebEntity, Long> {
 
   @Query(
       "MATCH (firstEntity:SemwebEntity {uri: $firstUri})-[isRelated:IS_RELATED]-(secondEntity:SemwebEntity {uri: $secondUri}) "
-          + "WHERE isRelated.numberOfConnections/$rateDivider/isRelated.shortestDistance > $relatednessRate "
+          + "WHERE (isRelated.numberOfConnections*$rateMultiplier)/(isRelated.shortestDistance*$maxNumberOfConnections) > $relatednessRate "
           + "RETURN firstEntity, isRelated, secondEntity")
   List<SemwebEntity> findPairsByRelatedness(
-      String firstUri, String secondUri, double relatednessRate, int rateDivider);
+      String firstUri,
+      String secondUri,
+      double relatednessRate,
+      double rateMultiplier,
+      int maxNumberOfConnections);
 
   @Query(
       "MATCH (firstEntity:SemwebEntity {uri: $firstUri})-[isRelated:IS_RELATED]-(secondEntity:SemwebEntity {uri: $secondUri}) "
           + "RETURN firstEntity, isRelated, secondEntity")
   List<SemwebEntity> findPairByUris(String firstUri, String secondUri);
+
+  @Query("MATCH ()-[x:IS_RELATED]-() RETURN max(x.numberOfConnections) as maxNumberOfConnections")
+  int getMaxNumberOfConnections();
+
 
   @Query(
       "MATCH (:SemwebEntity {uri: $firstUri})-[isRelated:IS_RELATED]-(:SemwebEntity {uri: $secondUri}) "

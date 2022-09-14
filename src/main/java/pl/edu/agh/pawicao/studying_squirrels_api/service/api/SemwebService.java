@@ -544,6 +544,10 @@ public class SemwebService {
   public Set<SemwebResponseEntity> queryCache(
       List<String> spotlightEntities, double relatednessRate) {
     Set<SemwebResponseEntity> result = new HashSet<>();
+    int maxNumberOfConnections = semwebRepository.getMaxNumberOfConnections();
+    if (maxNumberOfConnections == 0) {
+      maxNumberOfConnections = 1;
+    }
     for (int i = 0; i < spotlightEntities.size(); ++i) {
       for (int j = i + 1; j < spotlightEntities.size(); ++j) {
         List<SemwebEntity> cachedPair =
@@ -551,7 +555,8 @@ public class SemwebService {
                 spotlightEntities.get(i),
                 spotlightEntities.get(j),
                 relatednessRate,
-                SemwebRates.NUMBER_OF_CONNECTIONS_DIVIDER);
+                SemwebRates.NUMBER_OF_CONNECTIONS_MULTIPLIER,
+                maxNumberOfConnections);
         if (cachedPair == null || cachedPair.isEmpty()) {
           continue;
         }
@@ -561,11 +566,9 @@ public class SemwebService {
             firstEntity.getRelatedEntities().isEmpty()
                 ? firstEntity.getRelatedEntitiesIncoming().get(0)
                 : firstEntity.getRelatedEntities().get(0);
-        int relatednessScore =
-            relationshipDetails.getNumberOfConnections()
-                / SemwebRates.NUMBER_OF_CONNECTIONS_DIVIDER
-                / relationshipDetails.getShortestDistance()
-                * 10;
+        int relatednessScore = (int)Math.round(
+          (relationshipDetails.getNumberOfConnections() * SemwebRates.NUMBER_OF_CONNECTIONS_MULTIPLIER)
+          / (maxNumberOfConnections * relationshipDetails.getShortestDistance()) * 10);
         result.add(new SemwebResponseEntity(firstEntity, relatednessScore));
         result.add(new SemwebResponseEntity(secondEntity, relatednessScore));
       }

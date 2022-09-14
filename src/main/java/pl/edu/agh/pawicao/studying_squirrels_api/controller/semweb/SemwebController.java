@@ -47,38 +47,6 @@ public class SemwebController {
         .filter(e -> !propsEntitiesURIs.contains(e.getUri()))
         .collect(Collectors.toList());
   }
-  /*
-  @GetMapping("/debug")
-  ResponseEntity<Boolean> debug() {
-    Map<String, List<SemwebPair>> debug = new HashMap<>();
-    SemwebResponseEntity firstEntity =
-        new SemwebResponseEntity(
-            "http://dbpedia.org/resource/Leonardo_da_Vinci",
-            "Leonardo da Vinci",
-            "http://en.wikipedia.org/wiki/Leonardo_da_Vinci");
-    SemwebResponseEntity secondEntity =
-        new SemwebResponseEntity(
-            "http://dbpedia.org/resource/Michelangelo",
-            "Michelangelo",
-            "http://en.wikipedia.org/wiki/Michelangelo");
-    SemwebPair semwebPair = new SemwebPair(firstEntity, secondEntity, 1, 10);
-    List<SemwebPair> debugList = new ArrayList<>();
-    debugList.add(semwebPair);
-    debug.put("makarena", debugList);
-    semwebService.updateCache(debug);
-    return ResponseEntity.ok(true);
-  }
-
-  @GetMapping("/debug2")
-  ResponseEntity<List<SemwebResponseEntity>> debug2() {
-    List<String> spotlightDebugEntities = new ArrayList<>();
-    spotlightDebugEntities.add("http://dbpedia.org/resource/Leonardo_da_Vinci");
-    spotlightDebugEntities.add("http://dbpedia.org/resource/Michelangelo");
-    List<SemwebResponseEntity> result =
-        filterEntities(semwebService.queryCache(spotlightDebugEntities, 0.2), new ArrayList<>());
-    result.sort(Comparator.comparingInt(SemwebResponseEntity::getOccurrences).reversed());
-    return ResponseEntity.ok(result);
-  }*/
 
   @PostMapping("/extract")
   ResponseEntity<SemwebResponse> extractEntities(@RequestBody SemwebRequest requestBody) {
